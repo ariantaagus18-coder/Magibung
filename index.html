@@ -1,0 +1,1556 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serunya Belajar Megibung Bersama Made & Teman-Teman</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk Ikon Premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Quicksand:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #faf6f0; /* Warna hangat krim pasir */
+            background-image: radial-gradient(#dfdcd6 1.2px, transparent 1.2px);
+            background-size: 24px 24px;
+        }
+        .comic-font {
+            font-family: 'Patrick Hand', cursive;
+        }
+        .title-font {
+            font-family: 'Cinzel', serif;
+        }
+        /* Efek Claymorphism Premium */
+        .clay-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #3b2314;
+            border-radius: 2rem;
+            box-shadow: 6px 6px 0px #3b2314;
+        }
+        .clay-btn-amber {
+            background-color: #f59e0b;
+            color: #3b2314;
+            border: 3px solid #3b2314;
+            border-radius: 1rem;
+            box-shadow: 4px 4px 0px #3b2314;
+            transition: all 0.2s ease;
+        }
+        .clay-btn-amber:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #3b2314;
+        }
+        .clay-btn-amber:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #3b2314;
+        }
+        .clay-btn-emerald {
+            background-color: #10b981;
+            color: white;
+            border: 3px solid #3b2314;
+            border-radius: 1rem;
+            box-shadow: 4px 4px 0px #3b2314;
+            transition: all 0.2s ease;
+        }
+        .clay-btn-emerald:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #3b2314;
+        }
+        .clay-btn-emerald:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #3b2314;
+        }
+        .clay-btn-rose {
+            background-color: #f43f5e;
+            color: white;
+            border: 3px solid #3b2314;
+            border-radius: 1rem;
+            box-shadow: 4px 4px 0px #3b2314;
+            transition: all 0.2s ease;
+        }
+        .clay-btn-rose:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #3b2314;
+        }
+        .clay-btn-rose:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #3b2314;
+        }
+        /* Balon Kata Komik */
+        .speech-bubble {
+            position: relative;
+            background: #ffffff;
+            border: 3px solid #3b2314;
+            border-radius: 1.5rem;
+            box-shadow: 4px 4px 0px rgba(59, 35, 20, 0.15);
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        .bubble-left::after {
+            left: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 10px 16px 10px 0;
+            border-color: transparent #ffffff transparent transparent;
+        }
+        .bubble-left::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 12px 20px 12px 0;
+            border-color: transparent #3b2314 transparent transparent;
+            z-index: -1;
+        }
+        .bubble-right::after {
+            right: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 10px 0 10px 16px;
+            border-color: transparent transparent transparent #ffffff;
+        }
+        .bubble-right::before {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 12px 0 12px 20px;
+            border-color: transparent transparent transparent #3b2314;
+            z-index: -1;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1ebd9;
+            border-left: 2px solid #3b2314;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d97706;
+            border: 2px solid #3b2314;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-400 selection:text-amber-950 overflow-x-hidden">
+
+    <!-- Notifikasi Toast Kustom -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- AUDIO SYNTHESIS CONTEXT -->
+    <script>
+        class AudioSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playBeep(freq, type, duration, vol) {
+                this.init();
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type || 'sine';
+                osc.frequency.setValueAtTime(freq || 440, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol || 0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+            playPageFlip() {
+                this.playBeep(250, 'triangle', 0.2, 0.15);
+                setTimeout(() => this.playBeep(400, 'sine', 0.15, 0.1), 60);
+            }
+            playClick() {
+                this.playBeep(500, 'sine', 0.08, 0.12);
+            }
+            playSuccess() {
+                const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playBeep(freq, 'triangle', 0.3, 0.15);
+                    }, idx * 100);
+                });
+            }
+            playError() {
+                this.playBeep(150, 'sawtooth', 0.4, 0.2);
+            }
+            playGong() {
+                this.playBeep(110, 'sine', 1.8, 0.4); 
+                this.playBeep(220, 'triangle', 1.4, 0.2); 
+            }
+        }
+        const synth = new AudioSynth();
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl shadow-lg text-sm font-bold transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto flex items-center gap-2 border-2 border-[#3b2314] ${
+                type === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+            }`;
+            toast.innerHTML = `<span>${type === 'success' ? '✨' : '⚠️'}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3000);
+        }
+    </script>
+
+    <!-- LANDING & LOGIN PAGE -->
+    <div id="landing-page" class="fixed inset-0 z-50 bg-[#164e63] flex items-center justify-center p-4 overflow-y-auto">
+        <div class="max-w-xl w-full bg-[#faf6f0] border-4 border-[#3b2314] rounded-3xl p-8 shadow-[8px_8px_0px_#3b2314] text-[#3b2314] relative overflow-hidden my-auto">
+            <div class="absolute -top-12 -right-12 text-9xl opacity-10">🌴</div>
+            <div class="absolute -bottom-12 -left-12 text-9xl opacity-10">🍲</div>
+            
+            <div class="text-center mb-8">
+                <span class="text-6xl block mb-2 animate-bounce">🌸</span>
+                <h1 class="title-font font-black text-3xl text-amber-800 tracking-wider">MEGIBUNG</h1>
+                <p class="text-xs text-cyan-900 font-bold uppercase tracking-widest mt-1">E-Komik Edukatif Nilai Kebersamaan Bali</p>
+            </div>
+
+            <!-- Panel Opsi Masuk -->
+            <div id="login-selection" class="flex flex-col gap-4">
+                <button onclick="switchLoginMode('siswa')" class="w-full py-4 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-black rounded-2xl border-4 border-[#3b2314] shadow-[4px_4px_0px_#3b2314] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 text-lg">
+                    <i class="fa-solid fa-graduation-cap"></i> Masuk Sebagai Siswa
+                </button>
+                <button onclick="switchLoginMode('admin')" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl border-4 border-[#3b2314] shadow-[4px_4px_0px_#3b2314] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 text-lg">
+                    <i class="fa-solid fa-chalkboard-user"></i> Masuk Sebagai Guru / Admin
+                </button>
+            </div>
+
+            <!-- Form Login Siswa -->
+            <div id="form-siswa" class="hidden flex flex-col gap-4">
+                <h3 class="font-bold text-lg text-amber-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen"></i> Masukkan Identitas Siswa
+                </h3>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Lengkap Siswa</label>
+                    <input type="text" id="siswa-name-input" placeholder="Ketik nama lengkap siswa..." class="w-full px-4 py-3 rounded-xl border-3 border-[#3b2314] text-base focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all font-semibold">
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="backToSelection()" class="flex-1 py-3 bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold rounded-xl border-3 border-[#3b2314]">
+                        Kembali
+                    </button>
+                    <button onclick="submitSiswaLogin()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-bold rounded-xl border-3 border-[#3b2314] shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 transition-all">
+                        Mulai Belajar 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form Login Admin -->
+            <div id="form-admin" class="hidden flex flex-col gap-4">
+                <h3 class="font-bold text-lg text-emerald-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-lock"></i> Verifikasi Keamanan Guru / Admin
+                </h3>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Panggilan Guru</label>
+                    <input type="text" id="admin-name-input" placeholder="Ketik nama Guru..." class="w-full px-4 py-3 rounded-xl border-3 border-[#3b2314] text-base focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password Akses</label>
+                    <input type="password" id="admin-pass-input" placeholder="Ketik sandi keamanan..." class="w-full px-4 py-3 rounded-xl border-3 border-[#3b2314] text-base focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-semibold">
+                </div>
+                <p class="text-xs text-emerald-700 italic font-semibold">Gunakan kata sandi default: <strong class="underline">admin123</strong></p>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="backToSelection()" class="flex-1 py-3 bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold rounded-xl border-3 border-[#3b2314]">
+                        Kembali
+                    </button>
+                    <button onclick="submitAdminLogin()" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl border-3 border-[#3b2314] shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 transition-all">
+                        Masuk Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-content" class="flex-grow flex flex-col">
+        <!-- HEADER -->
+        <header class="bg-[#1e3a34] border-b-4 border-[#3b2314] text-white px-4 py-3.5 sticky top-0 z-40 shadow-md">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🌸</span>
+                    <div>
+                        <h1 class="title-font text-lg md:text-xl font-bold tracking-wider text-amber-400">MEGIBUNG KARANGASEM</h1>
+                        <p class="text-xs text-slate-300 font-semibold uppercase tracking-widest">Komik Edukasi & Interaksi Warisan Luhur</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-3">
+                    <span id="user-badge" class="bg-amber-400 text-[#3b2314] px-4 py-1.5 rounded-full text-xs font-bold border-2 border-[#3b2314] shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user"></i> <span id="current-username-text">Tamu</span>
+                    </span>
+                    <button onclick="handleLogout()" class="bg-rose-500 hover:bg-rose-400 text-white font-bold px-3 py-1.5 rounded-lg text-xs border-2 border-[#3b2314] shadow-sm flex items-center gap-1 transition-all">
+                        <i class="fa-solid fa-door-open"></i> Keluar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTAINER UTAMA -->
+        <main class="max-w-7xl mx-auto px-4 py-8 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-start">
+            
+            <!-- KOLOM KIRI: JENDELA UTAMA KOMIK (Lg: col-span-8) -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                <!-- PANEL BADGE TOKOH YANG TERSEDIA -->
+                <div class="bg-amber-100/50 p-4 rounded-2xl border-3 border-[#3b2314] flex flex-wrap gap-2 items-center shadow-inner">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-[#3b2314] mr-2">Tokoh Halaman Ini:</span>
+                    <div id="character-badges" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- KOMIK JENDELA BINGKAI -->
+                <div class="clay-card p-6 md:p-8 flex flex-col min-h-[580px] justify-between relative overflow-hidden">
+                    
+                    <!-- Top Ribbon -->
+                    <div class="w-full flex justify-between items-center mb-4 border-b-2 border-amber-900/10 pb-3">
+                        <span class="text-amber-800 text-xl font-bold">🌸</span>
+                        <h2 id="comic-pane-title" class="title-font text-sm md:text-base font-black tracking-widest text-[#3b2314] uppercase">Memuat Cerita...</h2>
+                        <span class="text-amber-800 text-xl font-bold">🌸</span>
+                    </div>
+
+                    <!-- Kotak Narasi Komik -->
+                    <div class="bg-amber-100 border-3 border-[#3b2314] rounded-2xl p-4 mb-6 shadow-md text-[#3b2314] font-semibold relative leading-relaxed">
+                        <span class="absolute -top-3.5 left-4 bg-[#3b2314] text-white text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider">Narasi Cerita</span>
+                        <p id="narration-text" class="text-base text-stone-850">Mengambil narasi halaman...</p>
+                    </div>
+
+                    <!-- Area Ilustrasi Interaktif -->
+                    <div class="w-full bg-[#f4ebd9] rounded-2xl border-3 border-[#3b2314] mb-6 overflow-hidden relative flex flex-col items-center justify-center min-h-[250px] md:min-h-[300px] p-4 shadow-inner">
+                        <div id="illustration-media" class="flex items-center justify-center mb-2">
+                            <!-- Diisi secara dinamis dengan gambar base64 atau emoji -->
+                        </div>
+                        <div id="illustration-caption" class="text-xs text-[#3b2314] font-bold uppercase tracking-wide text-center bg-white/80 px-3 py-1.5 rounded-lg border-2 border-[#3b2314] mt-2 max-w-md">
+                            Memuat ilustrasi...
+                        </div>
+                    </div>
+
+                    <!-- Daftar Dialog Balon Kata -->
+                    <div id="dialogues-container" class="flex flex-col gap-4 min-h-[140px] justify-end"></div>
+                </div>
+
+                <!-- NAVIGASI TOMBOL HALAMAN -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-[#1e3a34] p-4 rounded-2xl border-3 border-[#3b2314] shadow-md">
+                    <div class="flex items-center gap-2">
+                        <button onclick="jumpToPage(0)" class="px-3 py-2 text-xs bg-slate-800 text-amber-400 border-2 border-[#3b2314] rounded-lg font-bold hover:bg-slate-700 transition-all">
+                            <i class="fa-solid fa-backward-step"></i> Ke Awal
+                        </button>
+                        <span id="page-counter" class="font-mono text-sm font-extrabold text-amber-400 bg-black/40 px-4 py-2 rounded-full border border-emerald-800">
+                            Halaman 1 / 10
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button id="btn-prev" onclick="prevPage()" class="px-5 py-2.5 text-sm bg-amber-100 hover:bg-amber-200 text-[#3b2314] border-3 border-[#3b2314] rounded-xl font-bold shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 active:shadow-none transition-all">
+                            <i class="fa-solid fa-arrow-left"></i> Sebelum
+                        </button>
+                        <button id="btn-next" onclick="nextPage()" class="px-6 py-2.5 text-sm bg-amber-500 hover:bg-amber-400 text-[#3b2314] border-3 border-[#3b2314] rounded-xl font-extrabold shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 active:shadow-none transition-all">
+                            Selanjutnya <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="hidden md:flex items-center gap-1 text-xs text-emerald-200 font-bold">
+                        <span>Gunakan tombol panah keyboard</span>
+                        <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-white font-mono text-[10px]">◀</kbd>
+                        <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-white font-mono text-[10px]">▶</kbd>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN: GAMIFIKASI INTERAKTIF & GLOSARIUM (Lg: col-span-4) -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                
+                <!-- KARTU GAMIFIKASI: TANTANGAN HALAMAN INI -->
+                <div class="clay-card p-6 border-3 border-[#3b2314] bg-amber-50 relative overflow-hidden">
+                    <div class="absolute -top-3 -right-3 text-7xl opacity-10">🎮</div>
+                    <h3 class="title-font text-lg font-black text-amber-800 flex items-center gap-2 border-b-2 border-amber-900/10 pb-2">
+                        <i class="fa-solid fa-gamepad"></i> Tantangan Adat
+                    </h3>
+                    
+                    <!-- Workspace Dynamic Puzzle Container -->
+                    <div id="gamified-workspace" class="mt-4">
+                        <!-- Konten tantangan dimuat di sini secara dinamis -->
+                    </div>
+                </div>
+
+                <!-- Panduan Budaya Megibung -->
+                <div class="clay-card p-6 border-3 border-[#3b2314]">
+                    <h3 class="title-font text-lg font-black text-amber-800 flex items-center gap-2 border-b-2 border-amber-900/10 pb-2">
+                        <i class="fa-solid fa-circle-info"></i> Nilai Karuhun Megibung
+                    </h3>
+                    <p class="text-sm text-stone-700 leading-relaxed mt-3">
+                        Tradisi khas Karangasem, Bali yang merujuk pada tata cara bersantap nasi dan lauk dalam satu piring anyaman bambu raksasa (<strong class="text-amber-800">Gibungan</strong>) secara melingkar.
+                    </p>
+                    
+                    <div class="mt-4 flex flex-col gap-3">
+                        <div class="flex gap-2 items-start bg-amber-100/40 p-2.5 rounded-xl border border-amber-200">
+                            <span class="text-lg">🤝</span>
+                            <div class="text-xs text-stone-700">
+                                <strong>Gotong Royong & Persatuan:</strong> Persaudaraan erat terjalin sejak awal proses memasak hingga merapikan banjar secara bersama-sama.
+                            </div>
+                        </div>
+                        <div class="flex gap-2 items-start bg-amber-100/40 p-2.5 rounded-xl border border-amber-200">
+                            <span class="text-lg">⚖️</span>
+                            <div class="text-xs text-stone-700">
+                                <strong>Keadilan Sosial:</strong> Semua orang duduk setara tanpa memandang latar belakang sosial dan mendapat porsi hidangan yang sama.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kamus Bahasa Karangasem -->
+                <div class="clay-card p-6 border-3 border-[#3b2314]">
+                    <h3 class="title-font text-lg font-black text-emerald-800 flex items-center gap-2 border-b-2 border-amber-900/10 pb-2">
+                        <i class="fa-solid fa-book-bookmark"></i> Kamus Budaya Halaman Ini
+                    </h3>
+                    <div id="vocabulary-container" class="mt-4 space-y-3">
+                        <!-- Diisi secara dinamis tergantung halaman aktif -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- PANEL KONTROL GURU & ADMIN (Hanya terlihat jika logged-in role == 'admin') -->
+        <div id="admin-panel-section" class="hidden max-w-7xl mx-auto w-full px-4 pb-12">
+            <div class="clay-card p-6 md:p-8 border-3 border-emerald-950 bg-emerald-50 text-slate-900">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b-3 border-[#3b2314] pb-4 mb-6 gap-3">
+                    <div>
+                        <h2 class="title-font font-black text-xl text-emerald-900 tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-sliders"></i> PANEL KONTROL GURU & ADMIN
+                        </h2>
+                        <p class="text-xs text-emerald-800 font-semibold uppercase tracking-wider mt-1">Sesuaikan Ilustrasi, Deskripsi, dan Simpan Perubahan Permanen</p>
+                    </div>
+                    <button onclick="resetAllToDefault()" class="clay-btn-rose px-4 py-2 text-xs font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Semua Ke Default
+                    </button>
+                </div>
+
+                <!-- Bagian Pengeditan Ilustrasi -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    
+                    <!-- Sub-panel Pilihan Halaman -->
+                    <div class="lg:col-span-4 bg-emerald-100/50 p-4 rounded-2xl border-2 border-[#3b2314]">
+                        <h4 class="font-extrabold text-xs uppercase text-emerald-900 mb-3 tracking-wide">Pilih Halaman Untuk Diedit:</h4>
+                        <div id="admin-page-list" class="flex flex-col gap-1.5 max-h-[350px] overflow-y-auto pr-2">
+                            <!-- Diisi dengan daftar tombol halaman 1-10 -->
+                        </div>
+                    </div>
+
+                    <!-- Sub-panel Form Kustomisasi -->
+                    <div class="lg:col-span-8 bg-white p-5 rounded-2xl border-2 border-[#3b2314] flex flex-col gap-4">
+                        <div class="bg-amber-100 p-3 rounded-xl border border-[#3b2314] flex items-center justify-between">
+                            <span class="text-sm font-bold text-amber-900" id="admin-edit-title">Sedang Mengedit: Halaman 1</span>
+                            <span class="text-[10px] bg-[#3b2314] text-white px-2 py-0.5 rounded-full font-bold">MODE EDITOR</span>
+                        </div>
+
+                        <!-- 1. Edit Deskripsi Ilustrasi -->
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-1">Deskripsi Ilustrasi (Caption Gambar)</label>
+                            <input type="text" id="admin-desc-input" placeholder="Ketik deskripsi ilustrasi..." class="w-full px-3 py-2 border-2 border-[#3b2314] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold">
+                        </div>
+
+                        <!-- 2. Edit Ikon Emoji -->
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-1">Ikon Emoji (Ditampilkan jika tidak ada unggahan gambar)</label>
+                            <input type="text" id="admin-emoji-input" placeholder="Contoh: 🌸👨‍🍳🍢" class="w-full px-3 py-2 border-2 border-[#3b2314] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold">
+                        </div>
+
+                        <!-- 3. Unggah Berkas Gambar -->
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-1">Unggah Berkas Gambar Baru (PNG/JPG)</label>
+                            <div class="flex flex-col sm:flex-row gap-3 items-center mt-1">
+                                <input type="file" id="admin-file-input" accept=".png, .jpg, .jpeg" class="w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-2 file:border-[#3b2314] file:text-xs file:font-bold file:bg-amber-100 file:text-[#3b2314] hover:file:bg-amber-200 cursor-pointer">
+                                <button onclick="deleteIllustrationImage()" class="w-full sm:w-auto px-4 py-2.5 bg-rose-200 hover:bg-rose-300 text-rose-800 border-2 border-[#3b2314] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shrink-0">
+                                    <i class="fa-solid fa-trash-can"></i> Hapus Gambar
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Area Pratinjau Ilustrasi yang Diubah -->
+                        <div class="p-3 bg-stone-50 rounded-xl border border-stone-200 flex flex-col items-center">
+                            <span class="text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-2">Pratinjau Hasil Saat Ini</span>
+                            <div id="admin-preview-area" class="w-full h-36 bg-[#f4ebd9] rounded-lg border-2 border-dashed border-stone-300 flex flex-col items-center justify-center p-2">
+                                <!-- Pratinjau dinamis -->
+                            </div>
+                        </div>
+
+                        <!-- Tombol Aksi Simpan -->
+                        <div class="flex gap-2 justify-end mt-2">
+                            <button onclick="saveCurrentPageChanges()" class="clay-btn-emerald px-6 py-3 font-extrabold text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Halaman Ini
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- POPUP MODAL SERTIFIKAT KELULUSAN -->
+        <div id="sertifikat-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+            <div class="max-w-md w-full bg-[#faf6f0] border-8 border-amber-500 rounded-3xl p-6 text-center text-[#3b2314] shadow-2xl relative">
+                <button onclick="closeSertifikat()" class="absolute top-3 right-4 text-xl font-bold hover:text-rose-600 transition-all">✕</button>
+                <div class="text-6xl mb-3">🏆</div>
+                <h3 class="title-font font-black text-2xl text-amber-800">SELAMAT!</h3>
+                <p class="font-bold text-sm mt-1">Kamu Berhasil Menyelesaikan Pembelajaran Adat Megibung</p>
+                
+                <div class="bg-white border-2 border-[#3b2314] rounded-2xl p-4 my-4 shadow-inner text-center">
+                    <span class="text-[10px] text-amber-800 font-black uppercase tracking-widest">Sertifikat Digital</span>
+                    <h4 id="cert-user-name" class="font-bold text-lg text-emerald-900 border-b border-stone-100 pb-1">Nama Siswa</h4>
+                    <p class="text-xs text-slate-600 mt-2 italic">Telah memahami nilai gotong royong, keadilan sosial, dan tata krama tradisi luhur Karangasem Bali.</p>
+                </div>
+                
+                <button onclick="closeSertifikat()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-black rounded-xl border-3 border-[#3b2314] shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 active:shadow-none transition-all">
+                    Selesai & Tutup 🌸
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- CODE LOGIC (DATABASE, RENDER, AND INTERACTIVITY) -->
+    <script>
+        // Data Tetap Struktur Cerita (Narasi & Dialog bersifat permanen)
+        const COMIC_STORY = [
+            {
+                page: 1,
+                title: "Hari yang Istimewa",
+                narration: "Pagi itu, suasana desa di Karangasem terlihat ramai. Warga sedang mempersiapkan sebuah acara adat.",
+                dialogues: [
+                    { character: "I Luh", text: "Wah, ramai sekali! Ada acara apa ya?", side: "left" },
+                    { character: "Wayan", text: "Aku dengar hari ini ada tradisi Megibung!", side: "right" },
+                    { character: "I Luh", text: "Megibung? Apa itu?", side: "left" }
+                ],
+                vocab: [
+                    { term: "Megibung", meaning: "Tradisi makan bersama khas masyarakat Karangasem untuk mempererat kebersamaan." },
+                    { term: "Karangasem", meaning: "Kabupaten di ujung timur Pulau Bali tempat lahirnya tradisi Megibung." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Warga membawa makanan dan menghias balai banjar",
+                    ikon: "🏘️🍲🎋",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "clicker",
+                    question: "Tabuh Kulkul Banjar! 🔔",
+                    instruction: "Sebelum memulai Megibung, ketuk Kulkul (kentongan kayu khas Bali) sebanyak 3 kali untuk memanggil warga banjar berkumpul!",
+                    btnLabel: "Pukul Kulkul 🥁",
+                    target: 3
+                }
+            },
+            {
+                page: 2,
+                title: "Rasa Penasaran I Luh",
+                narration: "I Luh dan Wayan melihat banyak orang tua memasak bersama.",
+                dialogues: [
+                    { character: "I Luh", text: "Kenapa semua memasak bersama?", side: "left" },
+                    { character: "Wayan", text: "Karena makanan ini akan dinikmati bersama saat Megibung.", side: "right" },
+                    { character: "I Luh", text: "Menarik sekali!", side: "left" }
+                ],
+                vocab: [
+                    { term: "Banjar", meaning: "Balai pertemuan warga adat di Bali sekaligus pusat aktivitas sosial." },
+                    { term: "Lawar", meaning: "Masakan khas Bali berupa campuran sayuran, daging cincang, dan bumbu rempah." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Bapak-bapak memasak lawar, sate, dan ibu-ibu memasak nasi",
+                    ikon: "👨‍🍳🍢🥘🍚",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Rempah Utama Base Gede 🌶️",
+                    instruction: "Dalam memasak hidangan Megibung, bumbu tradisional apa yang paling wajib disiapkan?",
+                    choices: [
+                        { text: "Mayones dan Keju", isCorrect: false },
+                        { text: "Bawang, Cabai, Lengkuas, & Kencur (Base Gede)", isCorrect: true },
+                        { text: "Mentega cair dan Saus Tomat", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 3,
+                title: "Bertemu Kakek Wayan",
+                narration: "I Luh menemui Kakek Wayan untuk mengetahui lebih banyak tentang Megibung.",
+                dialogues: [
+                    { character: "I Luh", text: "Kakek, apa itu Megibung?", side: "left" },
+                    { character: "Kakek Wayan", text: "Megibung adalah tradisi makan bersama yang sudah diwariskan sejak lama di Karangasem.", side: "right" },
+                    { character: "Wayan", text: "Jadi semua orang makan bersama?", side: "left" },
+                    { character: "Kakek Wayan", text: "Betul. Semua duduk melingkar dan menikmati makanan bersama-sama.", side: "right" }
+                ],
+                vocab: [
+                    { term: "Krama", meaning: "Warga atau anggota masyarakat adat di Bali." },
+                    { term: "Warisan Luhur", meaning: "Nilai-nilai budaya dari leluhur yang terus dijaga kelestariannya." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Kakek duduk sambil tersenyum menyambut anak-anak",
+                    ikon: "🧓🤗🌾",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Pencetus Tradisi Megibung 👑",
+                    instruction: "Menurut cerita luhur, siapakah tokoh yang memelopori tradisi Megibung di Karangasem?",
+                    choices: [
+                        { text: "Raja Karangasem (I Gusti Anglurah Ketut Karangasem)", isCorrect: true },
+                        { text: "Pedagang Asing dari Tiongkok", isCorrect: false },
+                        { text: "Penjelajah dari Eropa", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 4,
+                title: "Sejarah Megibung",
+                narration: "Kakek mulai bercerita tentang asal-usul Megibung.",
+                dialogues: [
+                    { character: "Kakek Wayan", text: "Dahulu, tradisi ini diperkenalkan oleh Raja Karangasem untuk mempererat persaudaraan.", side: "right" },
+                    { character: "I Luh", text: "Berarti Megibung sudah ada sejak lama ya, Kek?", side: "left" },
+                    { character: "Kakek Wayan", text: "Ya, dan sampai sekarang masih dilestarikan.", side: "right" }
+                ],
+                vocab: [
+                    { term: "Raja Karangasem", meaning: "Pemimpin bijaksana yang mencetuskan megibung sebagai pemersatu prajurit." },
+                    { term: "Ekspedisi", meaning: "Perjalanan militer masa lampau yang menjadi latar belakang terciptanya tradisi ini." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Ilustrasi suasana zaman dahulu penuh kedamaian",
+                    ikon: "👑🏰📜",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Tujuan Utama Megibung Kuno 🛡️",
+                    instruction: "Mengapa Raja Karangasem memperkenalkan cara makan bersama ini kepada para prajuritnya dulu?",
+                    choices: [
+                        { text: "Untuk melatih kekuatan fisik prajurit", isCorrect: false },
+                        { text: "Menghilangkan kasta dan mempererat rasa persaudaraan", isCorrect: true },
+                        { text: "Untuk menghukum prajurit yang kalah perang", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 5,
+                title: "Saat Megibung Dimulai",
+                narration: "Warga mulai duduk berkelompok membentuk lingkaran.",
+                dialogues: [
+                    { character: "I Luh", text: "Ayo kita duduk bersama.", side: "left" },
+                    { character: "Wayan", text: "Wah, semua makan dari tempat yang sama!", side: "right" },
+                    { character: "Gusti Ayu", text: "Seru sekali!, Ayo mbok Gek dan Bli De gabung bersama kami", side: "left" },
+                    { character: "Mbok Gek & Bli De", text: "Ayooo", side: "right" },
+                    { character: "Wayan", text: "Kakek ayo bergabung bersama kami juga", side: "left" },
+                    { character: "Kakek Wayan", text: "Nggih, ayo", side: "right" },
+                    { character: "Made", text: "Aku ikut! Seru sekali!", side: "left" }
+                ],
+                vocab: [
+                    { term: "Sela", meaning: "Aturan posisi duduk melingkar dalam kelompok Megibung." },
+                    { term: "Seluan", meaning: "Tempat duduk paling utama di bagian hulu yang diperuntukkan bagi tokoh tertua." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Satu kelompok terdiri dari beberapa orang yang duduk melingkar",
+                    ikon: "🔄🍛🧑‍🤝‍🧑",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "sela",
+                    question: "Posisi Duduk Kehormatan (Seluan) 🧓",
+                    instruction: "Dalam adat sela Megibung, siapakah yang berhak duduk di tempat utama 'Seluan' (posisi hulu paling terhormat)?",
+                    choices: [
+                        { text: "Anak-anak yang paling lincah", isCorrect: false },
+                        { text: "Tokoh masyarakat tertua atau Kakek Wayan", isCorrect: true },
+                        { text: "Siapa saja yang datang paling cepat", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 6,
+                title: "Belajar Nilai Kebersamaan",
+                narration: "Kakek menjelaskan makna Megibung kepada anak-anak.",
+                dialogues: [
+                    { character: "Kakek Wayan", text: "Megibung mengajarkan kita untuk saling menghargai.", side: "right" },
+                    { character: "Wayan", text: "Karena semua mendapat bagian yang sama?", side: "left" },
+                    { character: "Kakek Wayan", text: "Benar sekali.", side: "right" },
+                    { character: "I Luh", text: "Juga mengajarkan kerja sama dan persaudaraan.", side: "left" }
+                ],
+                vocab: [
+                    { term: "Kesetaraan", meaning: "Nilai sosial yang memandang semua manusia sama rata tanpa batasan kasta." },
+                    { term: "Toleransi", meaning: "Sikap saling menghormati perbedaan di dalam lingkaran masyarakat." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Kakek menerangkan dengan bijak nilai kesetaraan",
+                    ikon: "🧠❤️🤝",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Nilai Pancasila dalam Megibung ⚖️",
+                    instruction: "Nilai luhur sosial apa yang paling tecermin saat orang-orang duduk sejajar tanpa batasan kasta di hadapan makanan?",
+                    choices: [
+                        { text: "Keadilan Sosial & Kesetaraan", isCorrect: true },
+                        { text: "Sifat Individualisme", isCorrect: false },
+                        { text: "Kompetisi mencari kekuasaan", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 7,
+                title: "Saling Membantu",
+                narration: "Saat makan, Made kesulitan mengambil lauk yang jauh. Gusti Ayu segera membantu.",
+                dialogues: [
+                    { character: "Made", text: "Gusti Ayu, bisakah kamu membantuku mengambil sate?", side: "left" },
+                    { character: "Gusti Ayu", text: "Tentu Made, ini untukmu. Semangat kebersamaan!", side: "right" },
+                    { character: "Kakek Wayan", text: "Nah, itulah semangat Megibung, saling membantu.", side: "right" }
+                ],
+                vocab: [
+                    { term: "Sate Lilit", meaning: "Daging cincang yang dibumbui lalu dililitkan pada tusuk sate bambu lebar atau batang serai." },
+                    { term: "Saling Asah Asih Asuh", meaning: "Filsafat hidup Bali: saling mencerdaskan, saling menyayangi, dan saling menjaga." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Gusti Ayu membantu mengambilkan lauk pauk",
+                    ikon: "🍢🤲😊",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "math",
+                    question: "Matematika Adil Sate Lilit 🍢",
+                    instruction: "Ada 24 tusuk sate lilit di atas piring anyaman bambu (Gibungan). Jika satu kelompok Megibung beranggotakan 8 orang, berapa tusuk sate maksimal yang boleh diambil setiap orang agar adil merata?",
+                    answer: 3
+                }
+            },
+            {
+                page: 8,
+                title: "Pelajaran Berharga",
+                narration: "Acara Megibung selesai. Semua terlihat bahagia.",
+                dialogues: [
+                    { character: "Wayan", text: "Sekarang aku tahu bahwa Megibung bukan hanya tentang makan bersama.", side: "left" },
+                    { character: "I Luh", text: "Tetapi juga tentang kebersamaan.", side: "right" },
+                    { character: "Gusti Ayu", text: "Dan saling menghormati.", side: "left" }
+                ],
+                vocab: [
+                    { term: "Harmonis", meaning: "Hubungan rukun antar sesama anggota kelompok masyarakat." },
+                    { term: "Guyub", meaning: "Kondisi kebersamaan yang hangat dan penuh rasa kekeluargaan." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Anak-anak dan warga tersenyum puas setelah bersantap",
+                    ikon: "😊🍽️✨",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Adab Setelah Makan Berselesai 🧹",
+                    instruction: "Apa tindakan terbaik yang harus dilakukan bersama-sama oleh anak-anak setelah seluruh santapan Megibung habis?",
+                    choices: [
+                        { text: "Langsung pergi bermain meninggalkan piring kotor", isCorrect: false },
+                        { text: "Bergotong-royong merapikan wadah sisa makanan dan membersihkan balai banjar", isCorrect: true },
+                        { text: "Menunggu orang tua membersihkan semuanya sendiri", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 9,
+                title: "Pesan untuk Generasi Muda",
+                narration: "Kakek memberikan pesan kepada anak-anak.",
+                dialogues: [
+                    { character: "Kakek Wayan", text: "Anak-anak, budaya adalah warisan yang sangat berharga.", side: "right" },
+                    { character: "Wayan", text: "Kami akan menjaga dan melestarikannya, Kek.", side: "left" },
+                    { character: "Kakek Wayan", text: "Bagus sekali. Budaya akan tetap hidup jika generasi muda mencintainya.", side: "right" }
+                ],
+                vocab: [
+                    { term: "Generasi Penerus", meaning: "Kelompok pemuda-pemudi yang berkewajiban merawat adat masa depan." },
+                    { term: "Melestarikan", meaning: "Upaya menjaga warisan budaya agar tidak hilang digerus zaman." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Kakek Wayan berbicara dengan penuh kasih",
+                    ikon: "🧓💬🌟",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Merawat Jati Diri Bangsa 🇮🇩",
+                    instruction: "Bagaimana cara terbaik generasi penerus bangsa agar tradisi kearifan lokal seperti Megibung ini tidak terancam punah?",
+                    choices: [
+                        { text: "Mempelajari maknanya, melestarikannya, dan mengamalkan nilai gotong royongnya", isCorrect: true },
+                        { text: "Mengabaikannya karena dianggap ketinggalan zaman", isCorrect: false },
+                        { text: "Hanya melaksanakannya jika diberikan imbalan uang", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 10,
+                title: "Penutup Keberhasilan",
+                narration: "Wayan dan teman-temannya pulang dengan hati gembira. Mereka bangga memiliki budaya Megibung sebagai warisan masyarakat Karangasem.",
+                dialogues: [
+                    { character: "Wayan", text: "Aku akan menceritakan Megibung kepada teman-teman di sekolah.", side: "left" },
+                    { character: "I Luh", text: "Aku juga!", side: "right" },
+                    { character: "Made", text: "Ayo lestarikan budaya Karangasem!", side: "left" },
+                    { character: "Gusti Ayu", text: "Bersama kita jaga tradisi!", side: "right" },
+                    { character: "Bersama-sama", text: "Ayo lestarikan budaya Karangasem!", side: "left" }
+                ],
+                vocab: [
+                    { term: "Lestari", meaning: "Kondisi budaya yang tetap ada, terjaga, dan hidup di tengah masyarakat." },
+                    { term: "Bangga", meaning: "Perasaan senang dan terhormat atas kepemilikan kearifan lokal luhur." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Suasana bahagia sambil melambaikan tangan bersama warga",
+                    ikon: "🏡🎉❤️",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "finish",
+                    question: "Selamat! Pembelajaran Selesai 🏆",
+                    instruction: "Kamu telah menjawab seluruh teka-teki moral adat Megibung dengan sempurna! Silakan klik tombol klaim sertifikat kehormatan di bawah ini.",
+                    btnLabel: "Ambil Sertifikat Kebudayaan 📜"
+                }
+            }
+        ];
+
+        // Metadata Karakter Avatars
+        const CHARACTER_META = {
+            "I Luh": { emoji: "👩🏽", color: "bg-pink-100 border-pink-400 text-pink-700" },
+            "Wayan": { emoji: "👦🏽", color: "bg-blue-100 border-blue-400 text-blue-700" },
+            "Gusti Ayu": { emoji: "👩🏽‍🌾", color: "bg-purple-100 border-purple-400 text-purple-700" },
+            "Made": { emoji: "👨🏽‍🍳", color: "bg-amber-100 border-amber-400 text-amber-700" },
+            "Kakek Wayan": { emoji: "👴🏽", color: "bg-stone-200 border-stone-500 text-stone-700" },
+            "Mbok Gek": { emoji: "👩🏽‍🦱", color: "bg-red-100 border-red-400 text-red-700" },
+            "Bli De": { emoji: "👨🏽‍💼", color: "bg-teal-100 border-teal-400 text-teal-700" },
+            "Mbok Gek & Bli De": { emoji: "👥", color: "bg-indigo-100 border-indigo-400 text-indigo-700" },
+            "Bersama-sama": { emoji: "👥", color: "bg-orange-100 border-orange-400 text-orange-700" }
+        };
+
+        // State Global Aplikasi
+        let currentRole = 'siswa'; // 'siswa' | 'admin'
+        let currentUsername = 'Tamu';
+        let currentPageIdx = 0; // Halaman aktif (0-9)
+        let adminSelectedPageIdx = 0; // Halaman yang sedang diedit di panel admin
+        let illustrationsState = []; // Menyimpan kustomisasi visual dari localStorage / default
+        
+        // State Kuis Gamifikasi Terhadap Setiap Halaman
+        let quizProgress = {}; // Format: { 0: true, 1: false, ... } yang menyimpan status kelulusan tiap bab
+
+        // Inisialisasi Aplikasi Saat Selesai Dimuat
+        window.addEventListener('DOMContentLoaded', () => {
+            initIllustrationsState();
+            initQuizProgress();
+            setupKeyboardNavigation();
+        });
+
+        // Pengaturan Awal Ilustrasi dari LocalStorage atau Default
+        function initIllustrationsState() {
+            const savedData = localStorage.getItem('komikIlustrasi');
+            if (savedData) {
+                try {
+                    illustrationsState = JSON.parse(savedData);
+                } catch (e) {
+                    console.error("Gagal membaca localStorage, memuat default...", e);
+                    loadDefaultIllustrations();
+                }
+            } else {
+                loadDefaultIllustrations();
+            }
+        }
+
+        // Pengaturan Progres Kuis dari LocalStorage
+        function initQuizProgress() {
+            const savedQuiz = localStorage.getItem('komikQuizProgress');
+            if (savedQuiz) {
+                try {
+                    quizProgress = JSON.parse(savedQuiz);
+                } catch (e) {
+                    quizProgress = {};
+                }
+            } else {
+                quizProgress = {};
+            }
+        }
+
+        function saveQuizProgress() {
+            localStorage.setItem('komikQuizProgress', JSON.stringify(quizProgress));
+        }
+
+        // Memuat Konfigurasi Ilustrasi Default
+        function loadDefaultIllustrations() {
+            illustrationsState = COMIC_STORY.map(page => ({
+                page: page.page,
+                deskripsi: page.defaultIlustrasi.deskripsi,
+                ikon: page.defaultIlustrasi.ikon,
+                gambar: page.defaultIlustrasi.gambar
+            }));
+            saveToLocalStorage();
+        }
+
+        function saveToLocalStorage() {
+            localStorage.setItem('komikIlustrasi', JSON.stringify(illustrationsState));
+        }
+
+        // Alur Login - Berpindah Panel Form
+        function switchLoginMode(mode) {
+            synth.playClick();
+            document.getElementById('login-selection').classList.add('hidden');
+            if (mode === 'siswa') {
+                document.getElementById('form-siswa').classList.remove('hidden');
+            } else if (mode === 'admin') {
+                document.getElementById('form-admin').classList.remove('hidden');
+            }
+        }
+
+        function backToSelection() {
+            synth.playClick();
+            document.getElementById('form-siswa').classList.add('hidden');
+            document.getElementById('form-admin').classList.add('hidden');
+            document.getElementById('login-selection').classList.remove('hidden');
+        }
+
+        // Submit Form Login Siswa
+        function submitSiswaLogin() {
+            const nameInput = document.getElementById('siswa-name-input').value.trim();
+            if (nameInput.length < 2) {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Nama siswa minimal 2 karakter!", "error");
+                return;
+            }
+            
+            currentRole = 'siswa';
+            currentUsername = nameInput;
+            
+            enterApp();
+            showToast(`Halo ${currentUsername}! Selamat belajar adat Megibung.`, "success");
+        }
+
+        // Submit Form Login Admin
+        function submitAdminLogin() {
+            const adminName = document.getElementById('admin-name-input').value.trim();
+            const adminPass = document.getElementById('admin-pass-input').value;
+
+            if (adminName.length < 2) {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Nama panggilan guru wajib diisi!", "error");
+                return;
+            }
+
+            if (adminPass !== 'admin123') {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Kata sandi salah! Coba sandi 'admin123'.", "error");
+                return;
+            }
+
+            currentRole = 'admin';
+            currentUsername = `${adminName} (Guru)`;
+
+            enterApp();
+            showToast(`Akses Admin Guru berhasil diverifikasi!`, "success");
+        }
+
+        // Masuk ke Komik
+        function enterApp() {
+            synth.playGong();
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('current-username-text').innerText = currentUsername;
+
+            if (currentRole === 'admin') {
+                document.getElementById('admin-panel-section').classList.remove('hidden');
+                initAdminPanel();
+            } else {
+                document.getElementById('admin-panel-section').classList.add('hidden');
+            }
+
+            currentPageIdx = 0;
+            renderComicPage();
+        }
+
+        // Sesi Keluar / Logout
+        function handleLogout() {
+            synth.playBeep(180, 'sawtooth', 0.3, 0.1);
+            document.getElementById('siswa-name-input').value = "";
+            document.getElementById('admin-name-input').value = "";
+            document.getElementById('admin-pass-input').value = "";
+            
+            document.getElementById('landing-page').classList.remove('hidden');
+            document.getElementById('login-selection').classList.remove('hidden');
+            document.getElementById('form-siswa').classList.add('hidden');
+            document.getElementById('form-admin').classList.add('hidden');
+            
+            showToast("Berhasil keluar sesi belajar.", "success");
+        }
+
+        // --- STREAMING_CHUNK: Menyusun mesin render halaman komik... ---
+        function renderComicPage() {
+            const pageData = COMIC_STORY[currentPageIdx];
+            const activeIllust = illustrationsState[currentPageIdx];
+
+            // Render Judul & Navigasi Atas
+            document.getElementById('comic-pane-title').innerText = `${pageData.page}. ${pageData.title}`;
+            document.getElementById('page-counter').innerText = `Halaman ${pageData.page} / 10`;
+
+            // Render Narasi
+            document.getElementById('narration-text').innerText = pageData.narration;
+
+            // Render Area Ilustrasi (Menentukan render gambar unggahan atau fallback emoji)
+            const mediaContainer = document.getElementById('illustration-media');
+            const captionText = document.getElementById('illustration-caption');
+
+            mediaContainer.innerHTML = "";
+            captionText.innerText = activeIllust.deskripsi;
+
+            if (activeIllust.gambar) {
+                // Tampilkan gambar base64 yang sudah diunggah oleh Admin
+                const imgNode = document.createElement('img');
+                imgNode.src = activeIllust.gambar;
+                imgNode.alt = `Ilustrasi Halaman ${pageData.page}`;
+                imgNode.className = "max-w-[200px] max-h-[200px] object-contain rounded-xl border-3 border-[#3b2314] shadow-md bg-white p-1";
+                mediaContainer.appendChild(imgNode);
+            } else {
+                // Fallback Tampilkan Emoji
+                const emojiSpan = document.createElement('span');
+                emojiSpan.className = "text-7xl block tracking-widest py-4 drop-shadow-md";
+                emojiSpan.innerText = activeIllust.ikon || "🌸";
+                mediaContainer.appendChild(emojiSpan);
+            }
+
+            // Render Tombol Tokoh yang Aktif pada Halaman Ini
+            renderCharacterBadges(pageData);
+
+            // Render Dialog (Balon Kata Komik)
+            renderDialogues(pageData.dialogues);
+
+            // Render Glosarium Budaya Samping
+            renderVocabulary(pageData.vocab);
+
+            // Render Tantangan Kuis Gamifikasi Samping
+            renderInteractivePuzzle(pageData);
+
+            // Periksa Navigasi Kunci Batasan Halaman Pertama/Terakhir
+            checkNavigationLock();
+        }
+
+        // Render Badge Karakter yang sedang berbicara
+        function renderCharacterBadges(pageData) {
+            const badgeContainer = document.getElementById('character-badges');
+            badgeContainer.innerHTML = "";
+
+            // Menemukan daftar nama tokoh yang berbicara di halaman aktif ini
+            const activeSpeakers = new Set();
+            pageData.dialogues.forEach(diag => activeSpeakers.add(diag.character));
+
+            // Membuat badge untuk semua tokoh terdaftar
+            Object.keys(CHARACTER_META).forEach(charName => {
+                const isSpeaking = activeSpeakers.has(charName);
+                const char = CHARACTER_META[charName];
+                const badge = document.createElement('span');
+                
+                if (isSpeaking) {
+                    badge.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-[#3b2314] ${char.color} text-xs font-bold shadow-[2px_2px_0px_#3b2314] animate-pulse`;
+                    badge.innerHTML = `<span>${char.emoji}</span> <span>${charName}</span>`;
+                } else {
+                    badge.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-stone-200 bg-stone-100 text-stone-400 text-xs font-semibold opacity-50`;
+                    badge.innerHTML = `<span>${char.emoji}</span> <span>${charName}</span>`;
+                }
+                badgeContainer.appendChild(badge);
+            });
+        }
+
+        // Render Dialog dalam Balon Kata Komik
+        function renderDialogues(dialogues) {
+            const container = document.getElementById('dialogues-container');
+            container.innerHTML = "";
+
+            dialogues.forEach(diag => {
+                const isLeft = diag.side === 'left';
+                const char = CHARACTER_META[diag.character] || { emoji: "🧑🏽", color: "bg-stone-100 text-stone-700" };
+
+                const wrap = document.createElement('div');
+                wrap.className = `flex items-start gap-3 w-full my-1.5 ${isLeft ? 'flex-row' : 'flex-row-reverse'}`;
+
+                // Avatar Bulat Tokoh
+                const avatar = document.createElement('div');
+                avatar.className = `w-11 h-11 rounded-full flex items-center justify-center text-2xl shadow-md border-3 border-[#3b2314] ${char.color} shrink-0`;
+                avatar.innerText = char.emoji;
+
+                // Balon Kata
+                const bubble = document.createElement('div');
+                bubble.className = `speech-bubble ${isLeft ? 'bubble-left' : 'bubble-right'} p-3.5 max-w-[80%] md:max-w-[70%]`;
+
+                const nameTag = document.createElement('div');
+                nameTag.className = "text-[10px] font-black uppercase tracking-wider text-amber-900 mb-1";
+                nameTag.innerText = diag.character;
+
+                const textSpan = document.createElement('p');
+                textSpan.className = "comic-font text-base md:text-lg text-slate-800 leading-snug";
+                textSpan.innerText = diag.text;
+
+                bubble.appendChild(nameTag);
+                bubble.appendChild(textSpan);
+
+                wrap.appendChild(avatar);
+                wrap.appendChild(bubble);
+
+                container.appendChild(wrap);
+            });
+        }
+
+        // Render Glosarium Budaya Samping
+        function renderVocabulary(vocab) {
+            const container = document.getElementById('vocabulary-container');
+            container.innerHTML = "";
+
+            vocab.forEach(v => {
+                const item = document.createElement('div');
+                item.className = "p-3 bg-amber-50 rounded-xl border-2 border-[#3b2314] shadow-sm";
+                item.innerHTML = `
+                    <h5 class="text-xs font-extrabold text-amber-800 uppercase tracking-wide flex items-center gap-1">
+                        <i class="fa-solid fa-bookmark text-[10px]"></i> ${v.term}
+                    </h5>
+                    <p class="text-xs text-stone-700 mt-1 leading-relaxed">${v.meaning}</p>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // --- CORE GAMIFICATION PUZZLE RENDER ---
+        let currentClickCounter = 0; // State bantuan lokal kuis ketuk
+
+        function renderInteractivePuzzle(pageData) {
+            const workspace = document.getElementById('gamified-workspace');
+            workspace.innerHTML = "";
+
+            const puzzle = pageData.puzzle;
+            if (!puzzle) return;
+
+            // Judul Kuis
+            const title = document.createElement('h4');
+            title.className = "text-sm font-black text-amber-900 uppercase tracking-wide mb-2";
+            title.innerText = puzzle.question;
+            workspace.appendChild(title);
+
+            // Deskripsi Panduan
+            const desc = document.createElement('p');
+            desc.className = "text-xs text-stone-700 leading-relaxed mb-4";
+            desc.innerText = puzzle.instruction;
+            workspace.appendChild(desc);
+
+            const isSolved = quizProgress[currentPageIdx] === true;
+
+            // Jika Kuis Telah Terjawab / Sukses Dilalui
+            if (isSolved) {
+                const solvedCard = document.createElement('div');
+                solvedCard.className = "p-4 bg-emerald-100 border-2 border-emerald-500 rounded-2xl text-emerald-800 text-xs font-bold flex flex-col items-center gap-2 shadow-inner";
+                solvedCard.innerHTML = `
+                    <span class="text-3xl">🎉</span>
+                    <span class="text-center">Tantangan Halaman Ini Berhasil Diselesaikan! Gerbang Halaman Selanjutnya Telah Terbuka.</span>
+                `;
+                workspace.appendChild(solvedCard);
+                return;
+            }
+
+            // Render Berdasarkan Jenis Kuis
+            if (puzzle.type === 'clicker') {
+                // Jenis Kuis: Ketuk Kulkul Berulang
+                const progressDiv = document.createElement('div');
+                progressDiv.className = "w-full bg-stone-200 border-2 border-[#3b2314] rounded-full h-4 mb-3 overflow-hidden shadow-inner relative";
+                
+                const progressFill = document.createElement('div');
+                progressFill.id = "kulkul-fill";
+                progressFill.className = "bg-amber-500 h-full w-0 transition-all duration-200";
+                progressDiv.appendChild(progressFill);
+                workspace.appendChild(progressDiv);
+
+                const btn = document.createElement('button');
+                btn.className = "w-full py-3 clay-btn-amber text-xs font-black uppercase flex items-center justify-center gap-2";
+                btn.innerHTML = `<i class="fa-solid fa-drum"></i> ${puzzle.btnLabel}`;
+                btn.onclick = () => {
+                    synth.playBeep(330, 'triangle', 0.15, 0.2);
+                    currentClickCounter++;
+                    const percent = (currentClickCounter / puzzle.target) * 100;
+                    document.getElementById('kulkul-fill').style.width = `${percent}%`;
+
+                    if (currentClickCounter >= puzzle.target) {
+                        currentClickCounter = 0;
+                        handlePuzzleSuccess();
+                    }
+                };
+                workspace.appendChild(btn);
+
+            } else if (puzzle.type === 'options' || puzzle.type === 'sela') {
+                // Jenis Kuis: Pilihan Ganda (Satu Jawaban Benar)
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = "flex flex-col gap-2";
+
+                puzzle.choices.forEach((choice, choiceIdx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full p-3 text-left bg-white hover:bg-amber-100/50 border-2 border-[#3b2314] rounded-xl text-xs font-bold transition-all flex items-center justify-between";
+                    btn.innerHTML = `<span>${choice.text}</span> <i class="fa-regular fa-circle text-stone-300"></i>`;
+                    
+                    btn.onclick = () => {
+                        if (choice.isCorrect) {
+                            handlePuzzleSuccess();
+                        } else {
+                            synth.playError();
+                            btn.className = "w-full p-3 text-left bg-rose-100 border-2 border-rose-500 rounded-xl text-xs font-bold text-rose-700 transition-all flex items-center justify-between";
+                            btn.innerHTML = `<span>${choice.text}</span> <i class="fa-solid fa-circle-xmark text-rose-500"></i>`;
+                            showToast("Jawabanmu kurang tepat, ayo baca lagi balon kata komiknya!", "error");
+                        }
+                    };
+                    optionsContainer.appendChild(btn);
+                });
+
+                workspace.appendChild(optionsContainer);
+
+            } else if (puzzle.type === 'math') {
+                // Jenis Kuis: Isian Matematika Adil
+                const mathDiv = document.createElement('div');
+                mathDiv.className = "flex flex-col gap-3";
+
+                const input = document.createElement('input');
+                input.type = "number";
+                input.id = "math-quiz-input";
+                input.placeholder = "Ketik jawaban angka...";
+                input.className = "w-full px-4 py-3 rounded-xl border-3 border-[#3b2314] text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-amber-500";
+                
+                const btn = document.createElement('button');
+                btn.className = "w-full py-3 clay-btn-amber text-xs font-bold uppercase";
+                btn.innerText = "Periksa Jawaban 📐";
+                btn.onclick = () => {
+                    const ans = parseInt(document.getElementById('math-quiz-input').value);
+                    if (ans === puzzle.answer) {
+                        handlePuzzleSuccess();
+                    } else {
+                        synth.playError();
+                        input.classList.add('border-rose-500', 'bg-rose-50');
+                        setTimeout(() => input.classList.remove('border-rose-500', 'bg-rose-50'), 1000);
+                        showToast("Hasil pembagianmu kurang adil! Silakan hitung kembali.", "error");
+                    }
+                };
+
+                mathDiv.appendChild(input);
+                mathDiv.appendChild(btn);
+                workspace.appendChild(mathDiv);
+
+            } else if (puzzle.type === 'finish') {
+                // Jenis Kuis: Penutup Selesai Komik
+                const btn = document.createElement('button');
+                btn.className = "w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black border-4 border-[#3b2314] rounded-2xl shadow-[4px_4px_0px_#3b2314] active:translate-y-1 active:shadow-none text-sm uppercase tracking-wider flex items-center justify-center gap-2";
+                btn.innerHTML = `<i class="fa-solid fa-award"></i> ${puzzle.btnLabel}`;
+                btn.onclick = () => {
+                    synth.playGong();
+                    openSertifikat();
+                };
+                workspace.appendChild(btn);
+            }
+        }
+
+        // Penanganan Sukses Tantangan Halaman
+        function handlePuzzleSuccess() {
+            synth.playSuccess();
+            quizProgress[currentPageIdx] = true;
+            saveQuizProgress();
+            showToast("Hebat! Tantangan berhasil dipecahkan.", "success");
+            renderComicPage(); // Segera render ulang untuk mengganti kartu puzzle jadi 'Solved'
+        }
+
+        // --- STREAMING_CHUNK: Menangani alur navigasi dan verifikasi kelulusan... ---
+        // Sertifikat Modal Controller
+        function openSertifikat() {
+            document.getElementById('cert-user-name').innerText = currentUsername;
+            document.getElementById('sertifikat-modal').classList.remove('hidden');
+        }
+
+        function closeSertifikat() {
+            document.getElementById('sertifikat-modal').classList.add('hidden');
+        }
+
+        // Kunci Navigasi Jika Di Awal atau Akhir & Cek Kuis Aktif
+        function checkNavigationLock() {
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+
+            // Halaman pertama
+            if (currentPageIdx === 0) {
+                btnPrev.disabled = true;
+                btnPrev.classList.add('opacity-40', 'cursor-not-allowed');
+            } else {
+                btnPrev.disabled = false;
+                btnPrev.classList.remove('opacity-40', 'cursor-not-allowed');
+            }
+
+            // Kunci Halaman Selanjutnya berdasarkan kelulusan kuis
+            const isSolved = quizProgress[currentPageIdx] === true;
+            
+            // Guru/Admin bebas melewatinya tanpa harus menjawab kuis
+            if (isSolved || currentRole === 'admin') {
+                btnNext.disabled = false;
+                btnNext.classList.remove('opacity-40', 'cursor-not-allowed');
+            } else {
+                btnNext.disabled = true;
+                btnNext.classList.add('opacity-40', 'cursor-not-allowed');
+            }
+
+            // Halaman terakhir
+            if (currentPageIdx === COMIC_STORY.length - 1) {
+                btnNext.innerHTML = `Selesai <i class="fa-solid fa-trophy text-amber-900 ml-1"></i>`;
+            } else {
+                btnNext.innerHTML = `Selanjutnya <i class="fa-solid fa-arrow-right"></i>`;
+            }
+        }
+
+        // Navigasi Pindah Halaman
+        window.prevPage = function() {
+            if (currentPageIdx > 0) {
+                currentPageIdx--;
+                synth.playPageFlip();
+                currentClickCounter = 0; // reset lokal klik
+                renderComicPage();
+            }
+        };
+
+        window.nextPage = function() {
+            // Validasi Kunci
+            const isSolved = quizProgress[currentPageIdx] === true;
+            if (!isSolved && currentRole !== 'admin') {
+                synth.playError();
+                showToast("Selesaikan Tantangan Adat di samping kanan terlebih dahulu!", "error");
+                return;
+            }
+
+            if (currentPageIdx < COMIC_STORY.length - 1) {
+                currentPageIdx++;
+                synth.playPageFlip();
+                currentClickCounter = 0; // reset lokal klik
+                renderComicPage();
+            } else {
+                // Halaman Terakhir Selesai
+                synth.playSuccess();
+                openSertifikat();
+            }
+        };
+
+        window.jumpToPage = function(idx) {
+            // Melompati halaman diizinkan jika halaman tujuan atau halaman saat ini sudah selesai
+            if (idx >= 0 && idx < COMIC_STORY.length) {
+                if (idx > currentPageIdx && quizProgress[currentPageIdx] !== true && currentRole !== 'admin') {
+                    synth.playError();
+                    showToast("Selesaikan kuis aktif terlebih dahulu!", "error");
+                    return;
+                }
+                currentPageIdx = idx;
+                synth.playPageFlip();
+                currentClickCounter = 0;
+                renderComicPage();
+            }
+        };
+
+        // Pintasan Navigasi Keyboard Arrow (Kiri / Kanan)
+        function setupKeyboardNavigation() {
+            document.addEventListener('keydown', (e) => {
+                // Pastikan tidak mengetik di form input saat navigasi keyboard berjalan
+                const focusedTag = document.activeElement.tagName.toLowerCase();
+                if (focusedTag === 'input' || focusedTag === 'textarea') return;
+
+                if (e.key === 'ArrowRight') {
+                    nextPage();
+                } else if (e.key === 'ArrowLeft') {
+                    prevPage();
+                }
+            });
+        }
+
+
+        // --- STREAMING_CHUNK: Mengembangkan fungsionalitas pengeditan Admin... ---
+        // --- FITUR ADMIN PANEL ---
+
+        // Inisialisasi Daftar Halaman di Panel Admin
+        function initAdminPanel() {
+            const listContainer = document.getElementById('admin-page-list');
+            listContainer.innerHTML = "";
+
+            COMIC_STORY.forEach((story, idx) => {
+                const btn = document.createElement('button');
+                btn.id = `admin-page-btn-${idx}`;
+                btn.className = `w-full text-left p-3 rounded-xl border-2 border-[#3b2314] text-xs font-bold transition-all flex items-center justify-between ${
+                    idx === adminSelectedPageIdx ? 'bg-amber-400 text-slate-900' : 'bg-white hover:bg-stone-50 text-slate-700'
+                }`;
+                btn.onclick = () => selectPageToEdit(idx);
+                
+                btn.innerHTML = `
+                    <span>Hal ${story.page} - ${story.title}</span>
+                    <i class="fa-solid fa-angle-right"></i>
+                `;
+                listContainer.appendChild(btn);
+            });
+
+            // Sinkronkan editor ke halaman terpilih awal
+            selectPageToEdit(adminSelectedPageIdx);
+        }
+
+        // Memilih Halaman Untuk Diedit dari Daftar
+        function selectPageToEdit(idx) {
+            synth.playClick();
+            
+            // Perbarui warna status tombol daftar
+            document.getElementById(`admin-page-btn-${adminSelectedPageIdx}`).className = "w-full text-left p-3 rounded-xl border-2 border-[#3b2314] text-xs font-bold transition-all flex items-center justify-between bg-white hover:bg-stone-50 text-slate-700";
+            document.getElementById(`admin-page-btn-${idx}`).className = "w-full text-left p-3 rounded-xl border-2 border-[#3b2314] text-xs font-bold transition-all flex items-center justify-between bg-amber-400 text-slate-900";
+            
+            adminSelectedPageIdx = idx;
+
+            const story = COMIC_STORY[idx];
+            const state = illustrationsState[idx];
+
+            document.getElementById('admin-edit-title').innerText = `Sedang Mengedit: Halaman ${story.page}`;
+            document.getElementById('admin-desc-input').value = state.deskripsi;
+            document.getElementById('admin-emoji-input').value = state.ikon;
+            document.getElementById('admin-file-input').value = ""; // Kosongkan file uploader
+
+            // Perbarui Pratinjau
+            updateAdminPreview();
+        }
+
+        // Pemrosesan File Gambar dengan FileReader & Resizer (Batas < 2MB untuk kenyamanan localStorage)
+        const fileInput = document.getElementById('admin-file-input');
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.match('image.*')) {
+                showToast("Berkas harus berupa gambar (JPG/PNG)!", "error");
+                fileInput.value = "";
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                showToast("Gambar terlalu besar! Batas ukuran maksimal adalah 2MB.", "error");
+                fileInput.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                // Kompresi Gambar Menggunakan Canvas Sebelum Dimasukkan Ke State
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 500; // Batasan lebar ideal untuk optimalisasi komik & penyimpanan
+                    let width = tempImg.width;
+                    let height = tempImg.height;
+
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(tempImg, 0, 0, width, height);
+
+                    // Konversi ke format JPEG dengan kualitas kompresi optimal
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Tempelkan gambar ke state lokal editor sementara
+                    illustrationsState[adminSelectedPageIdx].gambar = compressedBase64;
+                    updateAdminPreview();
+                    showToast("Gambar berhasil diunggah & dikompresi ke pratinjau!", "success");
+                };
+                tempImg.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Menghapus Gambar Unggahan (Kembali ke mode Emoji)
+        function deleteIllustrationImage() {
+            synth.playClick();
+            illustrationsState[adminSelectedPageIdx].gambar = null;
+            document.getElementById('admin-file-input').value = "";
+            updateAdminPreview();
+            showToast("Gambar unggahan dihapus. Halaman ini menggunakan Ikon Emoji.", "success");
+        }
+
+        // Perbarui Tampilan Pratinjau Panel Admin
+        function updateAdminPreview() {
+            const state = illustrationsState[adminSelectedPageIdx];
+            const previewArea = document.getElementById('admin-preview-area');
+            previewArea.innerHTML = "";
+
+            if (state.gambar) {
+                const img = document.createElement('img');
+                img.src = state.gambar;
+                img.className = "max-h-[100px] object-contain rounded-lg border border-stone-300 shadow bg-white p-1";
+                previewArea.appendChild(img);
+            } else {
+                const emoji = document.createElement('span');
+                emoji.className = "text-5xl block animate-pulse";
+                emoji.innerText = state.ikon || "🌸";
+                previewArea.appendChild(emoji);
+            }
+
+            const label = document.createElement('p');
+            label.className = "text-[10px] text-stone-600 font-bold mt-2 text-center truncate max-w-full";
+            label.innerText = `Deskripsi: "${state.deskripsi || '(Kosong)'}"`;
+            previewArea.appendChild(label);
+        }
+
+        // Menyimpan Perubahan Halaman Tertentu yang Dipilih
+        function saveCurrentPageChanges() {
+            const descValue = document.getElementById('admin-desc-input').value.trim();
+            const emojiValue = document.getElementById('admin-emoji-input').value.trim();
+
+            if (!descValue) {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Deskripsi ilustrasi tidak boleh kosong!", "error");
+                return;
+            }
+
+            // Simpan perubahan form ke state global
+            illustrationsState[adminSelectedPageIdx].deskripsi = descValue;
+            illustrationsState[adminSelectedPageIdx].ikon = emojiValue || "🌸";
+
+            // Tulis permanen ke localStorage
+            saveToLocalStorage();
+            synth.playSuccess();
+            showToast(`Perubahan Halaman ${adminSelectedPageIdx + 1} berhasil disimpan permanen!`, "success");
+
+            // Re-render komik di atas secara langsung jika sedang berada di halaman yang sama
+            if (currentPageIdx === adminSelectedPageIdx) {
+                renderComicPage();
+            }
+        }
+
+        // Mengatur Ulang Seluruh Ilustrasi ke Standar Bawaan Cerita (Global Reset)
+        function resetAllToDefault() {
+            if (confirm("Apakah Guru yakin ingin mereset seluruh kustomisasi gambar kembali ke bawaan sistem?")) {
+                loadDefaultIllustrations();
+                synth.playPageFlip();
+                
+                // Sinkronkan ulang tampilan editor dan halaman aktif komik
+                selectPageToEdit(adminSelectedPageIdx);
+                renderComicPage();
+                showToast("Seluruh halaman berhasil di-reset ke pengaturan default komik!", "success");
+            }
+        }
+    </script>
+</body>
+</html>
