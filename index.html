@@ -12,6 +12,146 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Quicksand:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // ================================================================
+        //  FIREBASE CONFIGURATION & INITIALIZATION
+        // ================================================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+        import {
+            getFirestore,
+            doc,
+            getDoc,
+            setDoc,
+            updateDoc,
+            collection,
+            getDocs
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAFF545VRAJRziwK4aRqU8TJ4Ba6v3SsI",
+            authDomain: "komik-megibung-karapy.firebaseapp.com",
+            projectId: "komik-megibung-karapy",
+            storageBucket: "komik-megibung-karapy.firebasestorage.app",
+            messagingSenderId: "959898524301",
+            appId: "1:959898524301:web:87d484cc20d5e2f7b720c4",
+            measurementId: "G-LSGPF2NLP4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // ================================================================
+        //  FIREBASE DATABASE HELPER FUNCTIONS
+        //  Expose ke window agar bisa dipanggil dari script non-module
+        // ================================================================
+
+        /**
+         * Menyimpan data ilustrasi kustomisasi Admin ke Firestore.
+         * Collection: komikIlustrasi / Document: globalSettings
+         * @param {Array} illustrationsState
+         */
+        window.fbSaveIllustrations = async function(illustrationsState) {
+            try {
+                await setDoc(doc(db, "komikIlustrasi", "globalSettings"), {
+                    data: JSON.stringify(illustrationsState),
+                    updatedAt: new Date().toISOString()
+                });
+                console.log("✅ Ilustrasi berhasil disimpan ke Firebase.");
+            } catch (e) {
+                console.error("❌ Gagal menyimpan ilustrasi ke Firebase:", e);
+                // Fallback ke localStorage
+                localStorage.setItem('komikIlustrasi', JSON.stringify(illustrationsState));
+            }
+        };
+
+        /**
+         * Memuat data ilustrasi dari Firestore.
+         * @returns {Array|null}
+         */
+        window.fbLoadIllustrations = async function() {
+            try {
+                const snap = await getDoc(doc(db, "komikIlustrasi", "globalSettings"));
+                if (snap.exists()) {
+                    const parsed = JSON.parse(snap.data().data);
+                    console.log("✅ Ilustrasi berhasil dimuat dari Firebase.");
+                    return parsed;
+                }
+                return null;
+            } catch (e) {
+                console.error("❌ Gagal memuat ilustrasi dari Firebase:", e);
+                return null;
+            }
+        };
+
+        /**
+         * Menyimpan progres kuis siswa ke Firestore.
+         * Collection: quizProgress / Document: nama siswa (sanitized)
+         * @param {string} username
+         * @param {Object} quizProgress
+         */
+        window.fbSaveQuizProgress = async function(username, quizProgress) {
+            try {
+                const docId = username.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase() || 'anonim';
+                await setDoc(doc(db, "quizProgress", docId), {
+                    username: username,
+                    progress: JSON.stringify(quizProgress),
+                    updatedAt: new Date().toISOString()
+                });
+                console.log(`✅ Progres kuis "${username}" disimpan ke Firebase.`);
+            } catch (e) {
+                console.error("❌ Gagal menyimpan progres kuis ke Firebase:", e);
+                // Fallback ke localStorage
+                localStorage.setItem('komikQuizProgress', JSON.stringify(quizProgress));
+            }
+        };
+
+        /**
+         * Memuat progres kuis siswa dari Firestore berdasarkan nama.
+         * @param {string} username
+         * @returns {Object}
+         */
+        window.fbLoadQuizProgress = async function(username) {
+            try {
+                const docId = username.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase() || 'anonim';
+                const snap = await getDoc(doc(db, "quizProgress", docId));
+                if (snap.exists()) {
+                    const parsed = JSON.parse(snap.data().progress);
+                    console.log(`✅ Progres kuis "${username}" dimuat dari Firebase.`);
+                    return parsed;
+                }
+                return {};
+            } catch (e) {
+                console.error("❌ Gagal memuat progres kuis dari Firebase:", e);
+                return {};
+            }
+        };
+
+        /**
+         * Menyimpan sesi login siswa ke Firestore (log aktivitas).
+         * Collection: loginSessions / Document: auto-id berbasis timestamp
+         * @param {string} username
+         * @param {string} role
+         */
+        window.fbLogSession = async function(username, role) {
+            try {
+                const docId = `${Date.now()}_${username.replace(/\s/g, '_')}`;
+                await setDoc(doc(db, "loginSessions", docId), {
+                    username: username,
+                    role: role,
+                    loginAt: new Date().toISOString()
+                });
+                console.log(`✅ Sesi login "${username}" (${role}) dicatat di Firebase.`);
+            } catch (e) {
+                console.error("❌ Gagal mencatat sesi login:", e);
+            }
+        };
+
+        console.log("🔥 Firebase Firestore siap digunakan.");
+    </script>
     
     <style>
         body {
@@ -855,33 +995,54 @@
         let quizProgress = {}; // Format: { 0: true, 1: false, ... } yang menyimpan status kelulusan tiap bab
 
         // Inisialisasi Aplikasi Saat Selesai Dimuat
-        window.addEventListener('DOMContentLoaded', () => {
-            initIllustrationsState();
-            initQuizProgress();
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initIllustrationsState();
             setupKeyboardNavigation();
         });
 
-        // Pengaturan Awal Ilustrasi dari LocalStorage atau Default
-        function initIllustrationsState() {
+        // Pengaturan Awal Ilustrasi dari Firebase (dengan fallback localStorage)
+        async function initIllustrationsState() {
+            try {
+                const firebaseData = await window.fbLoadIllustrations();
+                if (firebaseData && Array.isArray(firebaseData) && firebaseData.length > 0) {
+                    illustrationsState = firebaseData;
+                    console.log("Ilustrasi dimuat dari Firebase.");
+                    return;
+                }
+            } catch (e) {
+                console.warn("Firebase tidak tersedia, coba localStorage...", e);
+            }
+            // Fallback: localStorage
             const savedData = localStorage.getItem('komikIlustrasi');
             if (savedData) {
                 try {
                     illustrationsState = JSON.parse(savedData);
+                    return;
                 } catch (e) {
-                    console.error("Gagal membaca localStorage, memuat default...", e);
-                    loadDefaultIllustrations();
+                    console.error("Gagal membaca localStorage.", e);
                 }
-            } else {
-                loadDefaultIllustrations();
             }
+            loadDefaultIllustrations();
         }
 
-        // Pengaturan Progres Kuis dari LocalStorage
-        function initQuizProgress() {
+        // Pengaturan Progres Kuis dari Firebase
+        async function initQuizProgress(username) {
+            try {
+                const firebaseData = await window.fbLoadQuizProgress(username);
+                if (firebaseData && typeof firebaseData === 'object') {
+                    quizProgress = firebaseData;
+                    console.log("Progres kuis dimuat dari Firebase.");
+                    return;
+                }
+            } catch (e) {
+                console.warn("Firebase tidak tersedia, coba localStorage...", e);
+            }
+            // Fallback: localStorage
             const savedQuiz = localStorage.getItem('komikQuizProgress');
             if (savedQuiz) {
                 try {
                     quizProgress = JSON.parse(savedQuiz);
+                    return;
                 } catch (e) {
                     quizProgress = {};
                 }
@@ -891,6 +1052,11 @@
         }
 
         function saveQuizProgress() {
+            // Simpan ke Firebase (async, tidak perlu ditunggu)
+            if (window.fbSaveQuizProgress && currentUsername) {
+                window.fbSaveQuizProgress(currentUsername, quizProgress);
+            }
+            // Tetap simpan localStorage sebagai cache offline
             localStorage.setItem('komikQuizProgress', JSON.stringify(quizProgress));
         }
 
@@ -906,6 +1072,11 @@
         }
 
         function saveToLocalStorage() {
+            // Simpan ke Firebase (async)
+            if (window.fbSaveIllustrations) {
+                window.fbSaveIllustrations(illustrationsState);
+            }
+            // Tetap simpan localStorage sebagai cache offline
             localStorage.setItem('komikIlustrasi', JSON.stringify(illustrationsState));
         }
 
@@ -928,7 +1099,7 @@
         }
 
         // Submit Form Login Siswa
-        function submitSiswaLogin() {
+        async function submitSiswaLogin() {
             const nameInput = document.getElementById('siswa-name-input').value.trim();
             if (nameInput.length < 2) {
                 synth.playBeep(180, 'sawtooth', 0.3, 0.15);
@@ -939,12 +1110,12 @@
             currentRole = 'siswa';
             currentUsername = nameInput;
             
-            enterApp();
+            await enterApp();
             showToast(`Halo ${currentUsername}! Selamat belajar adat Megibung.`, "success");
         }
 
         // Submit Form Login Admin
-        function submitAdminLogin() {
+        async function submitAdminLogin() {
             const adminName = document.getElementById('admin-name-input').value.trim();
             const adminPass = document.getElementById('admin-pass-input').value;
 
@@ -963,15 +1134,24 @@
             currentRole = 'admin';
             currentUsername = `${adminName} (Guru)`;
 
-            enterApp();
+            await enterApp();
             showToast(`Akses Admin Guru berhasil diverifikasi!`, "success");
         }
 
         // Masuk ke Komik
-        function enterApp() {
+        async function enterApp() {
             synth.playGong();
             document.getElementById('landing-page').classList.add('hidden');
             document.getElementById('current-username-text').innerText = currentUsername;
+
+            // Muat progres kuis dari Firebase berdasarkan username
+            showToast("Memuat progres belajar...", "success");
+            await initQuizProgress(currentUsername);
+
+            // Catat sesi login ke Firebase
+            if (window.fbLogSession) {
+                window.fbLogSession(currentUsername, currentRole);
+            }
 
             if (currentRole === 'admin') {
                 document.getElementById('admin-panel-section').classList.remove('hidden');
@@ -1552,33 +1732,5 @@
             }
         }
     </script>
-<script type="module">
-  import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-  import { getDatabase, ref, set, get, child } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
-  import { getStorage, ref as storageRef, uploadString, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-storage.js";
-
-  const firebaseConfig = {
-    apiKey: "YOUR_API_KEY",
-    authDomain: "YOUR_AUTH_DOMAIN",
-    databaseURL: "YOUR_DATABASE_URL",
-    projectId: "YOUR_PROJECT_ID",
-    storageBucket: "YOUR_STORAGE_BUCKET",
-    messagingSenderId: "YOUR_SENDER_ID",
-    appId: "YOUR_APP_ID"
-  };
-
-  const app = initializeApp(firebaseConfig);
-  const db = getDatabase(app);
-  const storage = getStorage(app);
-
-  window.firebaseDB = db;
-  window.firebaseStorage = storage;
-  window.storageRef = storageRef;
-  window.set = set;
-  window.get = get;
-  window.child = child;
-  window.getDownloadURL = getDownloadURL;
-  window.uploadString = uploadString;
-</script>
 </body>
 </html>
