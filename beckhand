@@ -12,6 +12,146 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Quicksand:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+
+    <!-- Firebase SDK -->
+    <script type="module">
+        // ================================================================
+        //  FIREBASE CONFIGURATION & INITIALIZATION
+        // ================================================================
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+        import { getAnalytics } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-analytics.js";
+        import {
+            getFirestore,
+            doc,
+            getDoc,
+            setDoc,
+            updateDoc,
+            collection,
+            getDocs
+        } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+        const firebaseConfig = {
+            apiKey: "AIzaSyAAFF545VRAJRziwK4aRqU8TJ4Ba6v3SsI",
+            authDomain: "komik-megibung-karapy.firebaseapp.com",
+            projectId: "komik-megibung-karapy",
+            storageBucket: "komik-megibung-karapy.firebasestorage.app",
+            messagingSenderId: "959898524301",
+            appId: "1:959898524301:web:87d484cc20d5e2f7b720c4",
+            measurementId: "G-LSGPF2NLP4"
+        };
+
+        const app = initializeApp(firebaseConfig);
+        const analytics = getAnalytics(app);
+        const db = getFirestore(app);
+
+        // ================================================================
+        //  FIREBASE DATABASE HELPER FUNCTIONS
+        //  Expose ke window agar bisa dipanggil dari script non-module
+        // ================================================================
+
+        /**
+         * Menyimpan data ilustrasi kustomisasi Admin ke Firestore.
+         * Collection: komikIlustrasi / Document: globalSettings
+         * @param {Array} illustrationsState
+         */
+        window.fbSaveIllustrations = async function(illustrationsState) {
+            try {
+                await setDoc(doc(db, "komikIlustrasi", "globalSettings"), {
+                    data: JSON.stringify(illustrationsState),
+                    updatedAt: new Date().toISOString()
+                });
+                console.log("✅ Ilustrasi berhasil disimpan ke Firebase.");
+            } catch (e) {
+                console.error("❌ Gagal menyimpan ilustrasi ke Firebase:", e);
+                // Fallback ke localStorage
+                localStorage.setItem('komikIlustrasi', JSON.stringify(illustrationsState));
+            }
+        };
+
+        /**
+         * Memuat data ilustrasi dari Firestore.
+         * @returns {Array|null}
+         */
+        window.fbLoadIllustrations = async function() {
+            try {
+                const snap = await getDoc(doc(db, "komikIlustrasi", "globalSettings"));
+                if (snap.exists()) {
+                    const parsed = JSON.parse(snap.data().data);
+                    console.log("✅ Ilustrasi berhasil dimuat dari Firebase.");
+                    return parsed;
+                }
+                return null;
+            } catch (e) {
+                console.error("❌ Gagal memuat ilustrasi dari Firebase:", e);
+                return null;
+            }
+        };
+
+        /**
+         * Menyimpan progres kuis siswa ke Firestore.
+         * Collection: quizProgress / Document: nama siswa (sanitized)
+         * @param {string} username
+         * @param {Object} quizProgress
+         */
+        window.fbSaveQuizProgress = async function(username, quizProgress) {
+            try {
+                const docId = username.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase() || 'anonim';
+                await setDoc(doc(db, "quizProgress", docId), {
+                    username: username,
+                    progress: JSON.stringify(quizProgress),
+                    updatedAt: new Date().toISOString()
+                });
+                console.log(`✅ Progres kuis "${username}" disimpan ke Firebase.`);
+            } catch (e) {
+                console.error("❌ Gagal menyimpan progres kuis ke Firebase:", e);
+                // Fallback ke localStorage
+                localStorage.setItem('komikQuizProgress', JSON.stringify(quizProgress));
+            }
+        };
+
+        /**
+         * Memuat progres kuis siswa dari Firestore berdasarkan nama.
+         * @param {string} username
+         * @returns {Object}
+         */
+        window.fbLoadQuizProgress = async function(username) {
+            try {
+                const docId = username.replace(/[^a-zA-Z0-9_]/g, '_').toLowerCase() || 'anonim';
+                const snap = await getDoc(doc(db, "quizProgress", docId));
+                if (snap.exists()) {
+                    const parsed = JSON.parse(snap.data().progress);
+                    console.log(`✅ Progres kuis "${username}" dimuat dari Firebase.`);
+                    return parsed;
+                }
+                return {};
+            } catch (e) {
+                console.error("❌ Gagal memuat progres kuis dari Firebase:", e);
+                return {};
+            }
+        };
+
+        /**
+         * Menyimpan sesi login siswa ke Firestore (log aktivitas).
+         * Collection: loginSessions / Document: auto-id berbasis timestamp
+         * @param {string} username
+         * @param {string} role
+         */
+        window.fbLogSession = async function(username, role) {
+            try {
+                const docId = `${Date.now()}_${username.replace(/\s/g, '_')}`;
+                await setDoc(doc(db, "loginSessions", docId), {
+                    username: username,
+                    role: role,
+                    loginAt: new Date().toISOString()
+                });
+                console.log(`✅ Sesi login "${username}" (${role}) dicatat di Firebase.`);
+            } catch (e) {
+                console.error("❌ Gagal mencatat sesi login:", e);
+            }
+        };
+
+        console.log("🔥 Firebase Firestore siap digunakan.");
+    </script>
     
     <style>
         body {
@@ -156,7 +296,7 @@
     <!-- Notifikasi Toast Kustom -->
     <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
 
-    <!-- AUDIO SYNTHESIS CONTEXT (Suara Gamelan Virtual) -->
+    <!-- AUDIO SYNTHESIS CONTEXT -->
     <script>
         class AudioSynth {
             constructor() {
@@ -309,13 +449,7 @@
                 </div>
                 
                 <div class="flex flex-wrap items-center gap-3">
-                    <span id="sync-badge" class="bg-emerald-900 border border-emerald-600 text-emerald-300 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold">
-                        🟢 Realtime Sync: Aktif
-                    </span>
-                    <button onclick="toggleReferenceDrawer()" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-1.5 rounded-lg text-xs border-2 border-[#3b2314] flex items-center gap-1 transition-all">
-                        <i class="fa-solid fa-images"></i> Panduan Adat
-                    </button>
-                    <span id="user-badge" class="bg-[#faf6f0] text-[#3b2314] px-4 py-1.5 rounded-full text-xs font-bold border-2 border-[#3b2314] shadow-sm flex items-center gap-2">
+                    <span id="user-badge" class="bg-amber-400 text-[#3b2314] px-4 py-1.5 rounded-full text-xs font-bold border-2 border-[#3b2314] shadow-sm flex items-center gap-2">
                         <i class="fa-solid fa-user"></i> <span id="current-username-text">Tamu</span>
                     </span>
                     <button onclick="handleLogout()" class="bg-rose-500 hover:bg-rose-400 text-white font-bold px-3 py-1.5 rounded-lg text-xs border-2 border-[#3b2314] shadow-sm flex items-center gap-1 transition-all">
@@ -394,7 +528,7 @@
                 </div>
             </div>
 
-            <!-- KOLOM KANAN: GAMIFIKASI INTERAKTIF, GLOSARIUM, & CHATBOT (Lg: col-span-4) -->
+            <!-- KOLOM KANAN: GAMIFIKASI INTERAKTIF & GLOSARIUM (Lg: col-span-4) -->
             <div class="lg:col-span-4 flex flex-col gap-6">
                 
                 <!-- KARTU GAMIFIKASI: TANTANGAN HALAMAN INI -->
@@ -407,31 +541,6 @@
                     <!-- Workspace Dynamic Puzzle Container -->
                     <div id="gamified-workspace" class="mt-4">
                         <!-- Konten tantangan dimuat di sini secara dinamis -->
-                    </div>
-                </div>
-
-                <!-- ✨ TANYA KAKEK WAYAN AI CHATBOT -->
-                <div class="clay-card p-5 border-3 border-[#3b2314] bg-emerald-900 text-white relative overflow-hidden">
-                    <div class="absolute -top-3 -right-3 text-7xl opacity-10">👴🏽</div>
-                    <h3 class="title-font text-sm font-bold text-amber-400 flex items-center gap-2 border-b border-emerald-800 pb-2 uppercase tracking-widest">
-                        <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> Tanya Kakek Wayan AI
-                    </h3>
-                    <p class="text-[10px] text-emerald-200 mt-1.5 leading-relaxed">
-                        Ada yang belum dipahami tentang adat Megibung atau budaya Karangasem? Tanyakan apa saja langsung pada Kakek Wayan!
-                    </p>
-                    <div class="mt-3 flex flex-col gap-2">
-                        <div id="ai-chat-history" class="h-32 overflow-y-auto bg-slate-950/60 p-2.5 rounded-xl border border-emerald-800 text-xs flex flex-col gap-2">
-                            <div class="text-amber-300 font-medium leading-relaxed">👵🏽 <strong>Kakek Wayan:</strong> Swastiastu Cucu Kakek yang cerdas! Ada yang ingin ditanyakan tentang kebersamaan Megibung di Karangasem?</div>
-                        </div>
-                        <div class="flex gap-1.5">
-                            <input type="text" id="ai-chat-input" placeholder="Tanya kakek di sini..." class="flex-grow p-2.5 bg-slate-950 text-white rounded-xl border border-emerald-800 text-xs focus:outline-none focus:border-amber-400 font-semibold">
-                            <button id="btn-send-chat" onclick="handleSendAIChat()" class="px-3 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-bold rounded-xl text-xs flex items-center justify-center transition-all">
-                                Kirim
-                            </button>
-                        </div>
-                        <div id="ai-chat-loading" class="hidden text-[10px] text-amber-400 animate-pulse font-mono flex items-center gap-1.5 mt-1">
-                            <i class="fa-solid fa-spinner fa-spin"></i> Kakek sedang mengingat pesan leluhur...
-                        </div>
                     </div>
                 </div>
 
@@ -474,72 +583,65 @@
 
         <!-- PANEL KONTROL GURU & ADMIN (Hanya terlihat jika logged-in role == 'admin') -->
         <div id="admin-panel-section" class="hidden max-w-7xl mx-auto w-full px-4 pb-12">
-            <div class="clay-card p-6 md:p-8 border-3 border-emerald-950 bg-[#0f2922] text-slate-100">
+            <div class="clay-card p-6 md:p-8 border-3 border-emerald-950 bg-emerald-50 text-slate-900">
                 
                 <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b-3 border-[#3b2314] pb-4 mb-6 gap-3">
                     <div>
-                        <h2 class="title-font font-black text-xl text-amber-400 tracking-wide flex items-center gap-2">
-                            <i class="fa-solid fa-sliders"></i> PANEL KONTROL GURU & ADMIN (REAL-TIME DASHBOARD)
+                        <h2 class="title-font font-black text-xl text-emerald-900 tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-sliders"></i> PANEL KONTROL GURU & ADMIN
                         </h2>
-                        <p class="text-xs text-emerald-300 font-semibold uppercase tracking-wider mt-1">Sesuaikan Ilustrasi, Pantau Hasil Belajar Siswa, & Analisis Laporan Cerdas AI</p>
+                        <p class="text-xs text-emerald-800 font-semibold uppercase tracking-wider mt-1">Sesuaikan Ilustrasi, Deskripsi, dan Simpan Perubahan Permanen</p>
                     </div>
                     <button onclick="resetAllToDefault()" class="clay-btn-rose px-4 py-2 text-xs font-bold flex items-center gap-1">
                         <i class="fa-solid fa-rotate-left"></i> Reset Semua Ke Default
                     </button>
                 </div>
 
-                <!-- Kontrol Utama Grid -->
+                <!-- Bagian Pengeditan Ilustrasi -->
                 <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
                     
-                    <!-- Sub-panel Kiri: Pilihan Halaman & Form Kustomisasi Visual -->
-                    <div class="lg:col-span-6 bg-[#163c32] p-5 rounded-2xl border-2 border-emerald-800/80 flex flex-col gap-4">
-                        <h4 class="font-bold text-xs uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
-                            <i class="fa-solid fa-image"></i> Kustomisasi Visual Ilustrasi Halaman
-                        </h4>
-                        
-                        <div>
-                            <label class="block text-xs font-extrabold uppercase text-slate-300 mb-1">Pilih Halaman Untuk Diedit:</label>
-                            <select id="admin-select-page" onchange="selectPageToEdit(this.value)" class="w-full text-xs bg-slate-900 text-white border-2 border-emerald-800 px-3 py-2.5 rounded-xl focus:outline-none focus:border-amber-400 font-semibold">
-                                <option value="0">Halaman 1 - Hari yang Istimewa</option>
-                                <option value="1">Halaman 2 - Rasa Penasaran I Luh</option>
-                                <option value="2">Halaman 3 - Bertemu Kakek Wayan</option>
-                                <option value="3">Halaman 4 - Sejarah Megibung</option>
-                                <option value="4">Halaman 5 - Saat Megibung Dimulai</option>
-                                <option value="5">Halaman 6 - Belajar Nilai Kebersamaan</option>
-                                <option value="6">Halaman 7 - Saling Membantu</option>
-                                <option value="7">Halaman 8 - Pelajaran Berharga</option>
-                                <option value="8">Halaman 9 - Pesan untuk Generasi Muda</option>
-                                <option value="9">Halaman 10 - Penutup Keberhasilan</option>
-                            </select>
+                    <!-- Sub-panel Pilihan Halaman -->
+                    <div class="lg:col-span-4 bg-emerald-100/50 p-4 rounded-2xl border-2 border-[#3b2314]">
+                        <h4 class="font-extrabold text-xs uppercase text-emerald-900 mb-3 tracking-wide">Pilih Halaman Untuk Diedit:</h4>
+                        <div id="admin-page-list" class="flex flex-col gap-1.5 max-h-[350px] overflow-y-auto pr-2">
+                            <!-- Diisi dengan daftar tombol halaman 1-10 -->
+                        </div>
+                    </div>
+
+                    <!-- Sub-panel Form Kustomisasi -->
+                    <div class="lg:col-span-8 bg-white p-5 rounded-2xl border-2 border-[#3b2314] flex flex-col gap-4">
+                        <div class="bg-amber-100 p-3 rounded-xl border border-[#3b2314] flex items-center justify-between">
+                            <span class="text-sm font-bold text-amber-900" id="admin-edit-title">Sedang Mengedit: Halaman 1</span>
+                            <span class="text-[10px] bg-[#3b2314] text-white px-2 py-0.5 rounded-full font-bold">MODE EDITOR</span>
                         </div>
 
                         <!-- 1. Edit Deskripsi Ilustrasi -->
                         <div>
-                            <label class="block text-xs font-extrabold uppercase text-slate-300 mb-1">Deskripsi Ilustrasi (Caption Gambar)</label>
-                            <input type="text" id="admin-desc-input" placeholder="Ketik deskripsi ilustrasi..." class="w-full px-3 py-2 bg-slate-900 text-white border-2 border-emerald-800 rounded-xl text-sm focus:outline-none focus:border-amber-400 font-semibold">
+                            <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-1">Deskripsi Ilustrasi (Caption Gambar)</label>
+                            <input type="text" id="admin-desc-input" placeholder="Ketik deskripsi ilustrasi..." class="w-full px-3 py-2 border-2 border-[#3b2314] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold">
                         </div>
 
                         <!-- 2. Edit Ikon Emoji -->
                         <div>
-                            <label class="block text-xs font-extrabold uppercase text-slate-300 mb-1">Ikon Emoji (Fallback)</label>
-                            <input type="text" id="admin-emoji-input" placeholder="Contoh: 🌸👨‍🍳🍢" class="w-full px-3 py-2 bg-slate-900 text-white border-2 border-emerald-800 rounded-xl text-sm focus:outline-none focus:border-amber-400 font-semibold">
+                            <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-1">Ikon Emoji (Ditampilkan jika tidak ada unggahan gambar)</label>
+                            <input type="text" id="admin-emoji-input" placeholder="Contoh: 🌸👨‍🍳🍢" class="w-full px-3 py-2 border-2 border-[#3b2314] rounded-xl text-sm focus:outline-none focus:ring-1 focus:ring-emerald-500 font-semibold">
                         </div>
 
                         <!-- 3. Unggah Berkas Gambar -->
                         <div>
-                            <label class="block text-xs font-extrabold uppercase text-slate-300 mb-1">Unggah Berkas Gambar Baru (PNG/JPG)</label>
+                            <label class="block text-xs font-extrabold uppercase tracking-wide text-slate-700 mb-1">Unggah Berkas Gambar Baru (PNG/JPG)</label>
                             <div class="flex flex-col sm:flex-row gap-3 items-center mt-1">
-                                <input type="file" id="admin-file-input" accept=".png, .jpg, .jpeg" class="w-full text-xs text-stone-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-2 file:border-amber-500 file:text-xs file:font-bold file:bg-[#1e3a34] file:text-amber-400 hover:file:bg-[#254b43] cursor-pointer">
-                                <button onclick="deleteIllustrationImage()" class="w-full sm:w-auto px-4 py-2.5 bg-rose-900/60 hover:bg-rose-800 text-white border-2 border-rose-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shrink-0">
-                                    <i class="fa-solid fa-trash-can"></i> Hapus
+                                <input type="file" id="admin-file-input" accept=".png, .jpg, .jpeg" class="w-full text-xs text-stone-500 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-2 file:border-[#3b2314] file:text-xs file:font-bold file:bg-amber-100 file:text-[#3b2314] hover:file:bg-amber-200 cursor-pointer">
+                                <button onclick="deleteIllustrationImage()" class="w-full sm:w-auto px-4 py-2.5 bg-rose-200 hover:bg-rose-300 text-rose-800 border-2 border-[#3b2314] rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shrink-0">
+                                    <i class="fa-solid fa-trash-can"></i> Hapus Gambar
                                 </button>
                             </div>
                         </div>
 
                         <!-- Area Pratinjau Ilustrasi yang Diubah -->
-                        <div class="p-3 bg-slate-950 rounded-xl border border-emerald-800 flex flex-col items-center">
-                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Pratinjau Hasil Edit</span>
-                            <div id="admin-preview-area" class="w-full h-36 bg-[#f4ebd9] rounded-lg border-2 border-dashed border-emerald-800 flex flex-col items-center justify-center p-2">
+                        <div class="p-3 bg-stone-50 rounded-xl border border-stone-200 flex flex-col items-center">
+                            <span class="text-[10px] text-stone-400 font-bold uppercase tracking-wider mb-2">Pratinjau Hasil Saat Ini</span>
+                            <div id="admin-preview-area" class="w-full h-36 bg-[#f4ebd9] rounded-lg border-2 border-dashed border-stone-300 flex flex-col items-center justify-center p-2">
                                 <!-- Pratinjau dinamis -->
                             </div>
                         </div>
@@ -547,55 +649,8 @@
                         <!-- Tombol Aksi Simpan -->
                         <div class="flex gap-2 justify-end mt-2">
                             <button onclick="saveCurrentPageChanges()" class="clay-btn-emerald px-6 py-3 font-extrabold text-sm flex items-center gap-2">
-                                <i class="fa-solid fa-cloud-arrow-up"></i> Simpan ke Awan & Sinkronkan
+                                <i class="fa-solid fa-floppy-disk"></i> Simpan Perubahan Halaman Ini
                             </button>
-                        </div>
-                    </div>
-
-                    <!-- Sub-panel Kanan: Live Progress Hasil Siswa & AI Report Analyzer -->
-                    <div class="lg:col-span-6 bg-[#163c32] p-5 rounded-2xl border-2 border-emerald-800/80 flex flex-col gap-4">
-                        <h4 class="font-bold text-xs uppercase text-amber-400 tracking-wider flex items-center justify-between">
-                            <span><i class="fa-solid fa-users"></i> Daftar Nilai & Aktivitas Siswa (Real-Time)</span>
-                            <span class="bg-emerald-950 text-emerald-400 border border-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold">Sinkronisasi Hidup</span>
-                        </h4>
-
-                        <!-- Tabel Hasil Belajar Siswa -->
-                        <div class="overflow-x-auto rounded-xl border border-emerald-800 bg-slate-950">
-                            <table class="w-full text-left border-collapse text-xs">
-                                <thead>
-                                    <tr class="bg-[#1e3a34] text-slate-300 font-bold border-b border-emerald-800">
-                                        <th class="p-3">Nama Siswa</th>
-                                        <th class="p-3">Halaman</th>
-                                        <th class="p-3 text-center">Tantangan Selesai</th>
-                                        <th class="p-3 text-center">Hasil Kuis</th>
-                                        <th class="p-3">Waktu Log</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="student-live-tbody" class="text-slate-300 divide-y divide-emerald-900/60">
-                                    <tr>
-                                        <td colspan="5" class="p-4 text-center text-slate-500">Menunggu pendaftaran siswa baru...</td>
-                                    </tr>
-                                </tbody>
-                            </table>
-                        </div>
-
-                        <!-- ✨ AI ASSESSMENT REPORT GENERATOR -->
-                        <div class="mt-2 bg-slate-950 p-4 rounded-xl border border-emerald-800 flex flex-col gap-3">
-                            <div class="flex items-center justify-between">
-                                <span class="text-xs font-bold text-amber-300 uppercase tracking-wide"><i class="fa-solid fa-microchip animate-pulse"></i> Analisis Karakter & Kompetensi AI</span>
-                                <button id="btn-ai-analyze-students" onclick="handleAIAnalyzeStudents()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-black rounded-lg text-xs transition-all flex items-center gap-1.5 shadow">
-                                    ✨ Analisis Laporan Siswa
-                                </button>
-                            </div>
-                            <p class="text-[10px] text-slate-400 leading-normal">
-                                Generator AI akan menganalisis data riil perkembangan kognitif dan perilaku karakter siswa (gotong royong, kesetaraan) dari tabel di atas sesuai konsep Kurikulum Merdeka.
-                            </p>
-                            <div id="ai-evaluation-loading" class="hidden text-[10px] text-amber-400 animate-pulse font-mono flex items-center gap-1">
-                                <i class="fa-solid fa-spinner fa-spin"></i> Merumuskan model penilaian terintegrasi...
-                            </div>
-                            <div id="ai-evaluation-result" class="hidden p-3 rounded-lg bg-slate-900 border border-emerald-900 text-xs text-slate-300 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto font-mono">
-                                Hasil ulasan cerdas guru akan dimuat di sini...
-                            </div>
                         </div>
                     </div>
                 </div>
@@ -621,568 +676,601 @@
                 </button>
             </div>
         </div>
-
-        <!-- REFERENCE PANEL DRAWER (PANDUAN BUSANA ADAT) -->
-        <div id="reference-drawer" class="fixed inset-y-0 right-0 w-full max-w-xl bg-slate-900 border-l-4 border-amber-500 z-50 transform translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col text-white">
-            <div class="p-4 bg-slate-950 flex justify-between items-center border-b border-slate-800">
-                <div>
-                    <h3 class="title-font font-bold text-amber-400 text-sm">PANDUAN REFERENSI BUSANA ADAT BALI MADYA</h3>
-                    <p class="text-xs text-slate-400">Rujukan Akurasi Busana, Karakter, & Layout Dapur Tradisional</p>
-                </div>
-                <button onclick="toggleReferenceDrawer()" class="text-slate-400 hover:text-slate-100 bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold">
-                    ✕ Tutup
-                </button>
-            </div>
-
-            <div class="p-6 overflow-y-auto flex-grow flex flex-col gap-6">
-                <!-- Verbatim Visual Rujukan Model -->
-                <div class="border-2 border-amber-500/50 rounded-xl overflow-hidden bg-slate-950 p-2 text-center">
-                    <img src="Salinan COMIC SERUNYA BELAJAR DI KEBUN.jpg" alt="Salinan COMIC SERUNYA BELAJAR DI KEBUN.jpg" class="w-full h-auto rounded object-contain" onerror="this.src='https://placehold.co/600x400/163c32/ffba00?text=Salinan+COMIC+SERUNYA+BELAJAR+DI+KEBUN.jpg';">
-                    <span class="text-[10px] text-amber-500 font-bold block mt-2 uppercase tracking-wide">Gambar Rujukan: Salinan COMIC SERUNYA BELAJAR DI KEBUN.jpg</span>
-                </div>
-
-                <div class="grid grid-cols-2 gap-4 text-xs">
-                    <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
-                        <strong class="text-amber-400 block mb-1">👔 Busana Wanita Bali Madya</strong>
-                        Rambut sanggul pusung tagel, hiasan sekuntum bunga kamboja (frangipani) kuning, baju kebaya kuning/krem, selendang sash, serta kamen tenun bawah panjang.
-                    </div>
-                    <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
-                        <strong class="text-amber-400 block mb-1">👳 Busana Pria Bali Madya</strong>
-                        Udeng putih pengikat kepala khas Bali, kemeja safari putih daster kancing rapi, serta kamen merah marun bermotif prada emas tradisional.
-                    </div>
-                </div>
-            </div>
-        </div>
     </div>
 
-    <!-- CODE LOGIC & BACKEND INTEGATION (FIREBASE REALTIME BACKEND) -->
-    <script type="module">
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
-        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+    <!-- CODE LOGIC (DATABASE, RENDER, AND INTERACTIVITY) -->
+    <script>
+        // Data Tetap Struktur Cerita (Narasi & Dialog bersifat permanen)
+        const COMIC_STORY = [
+            {
+                page: 1,
+                title: "Hari yang Istimewa",
+                narration: "Pagi itu, suasana desa di Karangasem terlihat ramai. Warga sedang mempersiapkan sebuah acara adat.",
+                dialogues: [
+                    { character: "I Luh", text: "Wah, ramai sekali! Ada acara apa ya?", side: "left" },
+                    { character: "Wayan", text: "Aku dengar hari ini ada tradisi Megibung!", side: "right" },
+                    { character: "I Luh", text: "Megibung? Apa itu?", side: "left" }
+                ],
+                vocab: [
+                    { term: "Megibung", meaning: "Tradisi makan bersama khas masyarakat Karangasem untuk mempererat kebersamaan." },
+                    { term: "Karangasem", meaning: "Kabupaten di ujung timur Pulau Bali tempat lahirnya tradisi Megibung." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Warga membawa makanan dan menghias balai banjar",
+                    ikon: "🏘️🍲🎋",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "clicker",
+                    question: "Tabuh Kulkul Banjar! 🔔",
+                    instruction: "Sebelum memulai Megibung, ketuk Kulkul (kentongan kayu khas Bali) sebanyak 3 kali untuk memanggil warga banjar berkumpul!",
+                    btnLabel: "Pukul Kulkul 🥁",
+                    target: 3
+                }
+            },
+            {
+                page: 2,
+                title: "Rasa Penasaran I Luh",
+                narration: "I Luh dan Wayan melihat banyak orang tua memasak bersama.",
+                dialogues: [
+                    { character: "I Luh", text: "Kenapa semua memasak bersama?", side: "left" },
+                    { character: "Wayan", text: "Karena makanan ini akan dinikmati bersama saat Megibung.", side: "right" },
+                    { character: "I Luh", text: "Menarik sekali!", side: "left" }
+                ],
+                vocab: [
+                    { term: "Banjar", meaning: "Balai pertemuan warga adat di Bali sekaligus pusat aktivitas sosial." },
+                    { term: "Lawar", meaning: "Masakan khas Bali berupa campuran sayuran, daging cincang, dan bumbu rempah." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Bapak-bapak memasak lawar, sate, dan ibu-ibu memasak nasi",
+                    ikon: "👨‍🍳🍢🥘🍚",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Rempah Utama Base Gede 🌶️",
+                    instruction: "Dalam memasak hidangan Megibung, bumbu tradisional apa yang paling wajib disiapkan?",
+                    choices: [
+                        { text: "Mayones dan Keju", isCorrect: false },
+                        { text: "Bawang, Cabai, Lengkuas, & Kencur (Base Gede)", isCorrect: true },
+                        { text: "Mentega cair dan Saus Tomat", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 3,
+                title: "Bertemu Kakek Wayan",
+                narration: "I Luh menemui Kakek Wayan untuk mengetahui lebih banyak tentang Megibung.",
+                dialogues: [
+                    { character: "I Luh", text: "Kakek, apa itu Megibung?", side: "left" },
+                    { character: "Kakek Wayan", text: "Megibung adalah tradisi makan bersama yang sudah diwariskan sejak lama di Karangasem.", side: "right" },
+                    { character: "Wayan", text: "Jadi semua orang makan bersama?", side: "left" },
+                    { character: "Kakek Wayan", text: "Betul. Semua duduk melingkar dan menikmati makanan bersama-sama.", side: "right" }
+                ],
+                vocab: [
+                    { term: "Krama", meaning: "Warga atau anggota masyarakat adat di Bali." },
+                    { term: "Warisan Luhur", meaning: "Nilai-nilai budaya dari leluhur yang terus dijaga kelestariannya." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Kakek duduk sambil tersenyum menyambut anak-anak",
+                    ikon: "🧓🤗🌾",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Pencetus Tradisi Megibung 👑",
+                    instruction: "Menurut cerita luhur, siapakah tokoh yang memelopori tradisi Megibung di Karangasem?",
+                    choices: [
+                        { text: "Raja Karangasem (I Gusti Anglurah Ketut Karangasem)", isCorrect: true },
+                        { text: "Pedagang Asing dari Tiongkok", isCorrect: false },
+                        { text: "Penjelajah dari Eropa", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 4,
+                title: "Sejarah Megibung",
+                narration: "Kakek mulai bercerita tentang asal-usul Megibung.",
+                dialogues: [
+                    { character: "Kakek Wayan", text: "Dahulu, tradisi ini diperkenalkan oleh Raja Karangasem untuk mempererat persaudaraan.", side: "right" },
+                    { character: "I Luh", text: "Berarti Megibung sudah ada sejak lama ya, Kek?", side: "left" },
+                    { character: "Kakek Wayan", text: "Ya, dan sampai sekarang masih dilestarikan.", side: "right" }
+                ],
+                vocab: [
+                    { term: "Raja Karangasem", meaning: "Pemimpin bijaksana yang mencetuskan megibung sebagai pemersatu prajurit." },
+                    { term: "Ekspedisi", meaning: "Perjalanan militer masa lampau yang menjadi latar belakang terciptanya tradisi ini." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Ilustrasi suasana zaman dahulu penuh kedamaian",
+                    ikon: "👑🏰📜",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Tujuan Utama Megibung Kuno 🛡️",
+                    instruction: "Mengapa Raja Karangasem memperkenalkan cara makan bersama ini kepada para prajuritnya dulu?",
+                    choices: [
+                        { text: "Untuk melatih kekuatan fisik prajurit", isCorrect: false },
+                        { text: "Menghilangkan kasta dan mempererat rasa persaudaraan", isCorrect: true },
+                        { text: "Untuk menghukum prajurit yang kalah perang", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 5,
+                title: "Saat Megibung Dimulai",
+                narration: "Warga mulai duduk berkelompok membentuk lingkaran.",
+                dialogues: [
+                    { character: "I Luh", text: "Ayo kita duduk bersama.", side: "left" },
+                    { character: "Wayan", text: "Wah, semua makan dari tempat yang sama!", side: "right" },
+                    { character: "Gusti Ayu", text: "Seru sekali!, Ayo mbok Gek dan Bli De gabung bersama kami", side: "left" },
+                    { character: "Mbok Gek & Bli De", text: "Ayooo", side: "right" },
+                    { character: "Wayan", text: "Kakek ayo bergabung bersama kami juga", side: "left" },
+                    { character: "Kakek Wayan", text: "Nggih, ayo", side: "right" },
+                    { character: "Made", text: "Aku ikut! Seru sekali!", side: "left" }
+                ],
+                vocab: [
+                    { term: "Sela", meaning: "Aturan posisi duduk melingkar dalam kelompok Megibung." },
+                    { term: "Seluan", meaning: "Tempat duduk paling utama di bagian hulu yang diperuntukkan bagi tokoh tertua." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Satu kelompok terdiri dari beberapa orang yang duduk melingkar",
+                    ikon: "🔄🍛🧑‍🤝‍🧑",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "sela",
+                    question: "Posisi Duduk Kehormatan (Seluan) 🧓",
+                    instruction: "Dalam adat sela Megibung, siapakah yang berhak duduk di tempat utama 'Seluan' (posisi hulu paling terhormat)?",
+                    choices: [
+                        { text: "Anak-anak yang paling lincah", isCorrect: false },
+                        { text: "Tokoh masyarakat tertua atau Kakek Wayan", isCorrect: true },
+                        { text: "Siapa saja yang datang paling cepat", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 6,
+                title: "Belajar Nilai Kebersamaan",
+                narration: "Kakek menjelaskan makna Megibung kepada anak-anak.",
+                dialogues: [
+                    { character: "Kakek Wayan", text: "Megibung mengajarkan kita untuk saling menghargai.", side: "right" },
+                    { character: "Wayan", text: "Karena semua mendapat bagian yang sama?", side: "left" },
+                    { character: "Kakek Wayan", text: "Benar sekali.", side: "right" },
+                    { character: "I Luh", text: "Juga mengajarkan kerja sama dan persaudaraan.", side: "left" }
+                ],
+                vocab: [
+                    { term: "Kesetaraan", meaning: "Nilai sosial yang memandang semua manusia sama rata tanpa batasan kasta." },
+                    { term: "Toleransi", meaning: "Sikap saling menghormati perbedaan di dalam lingkaran masyarakat." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Kakek menerangkan dengan bijak nilai kesetaraan",
+                    ikon: "🧠❤️🤝",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Nilai Pancasila dalam Megibung ⚖️",
+                    instruction: "Nilai luhur sosial apa yang paling tecermin saat orang-orang duduk sejajar tanpa batasan kasta di hadapan makanan?",
+                    choices: [
+                        { text: "Keadilan Sosial & Kesetaraan", isCorrect: true },
+                        { text: "Sifat Individualisme", isCorrect: false },
+                        { text: "Kompetisi mencari kekuasaan", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 7,
+                title: "Saling Membantu",
+                narration: "Saat makan, Made kesulitan mengambil lauk yang jauh. Gusti Ayu segera membantu.",
+                dialogues: [
+                    { character: "Made", text: "Gusti Ayu, bisakah kamu membantuku mengambil sate?", side: "left" },
+                    { character: "Gusti Ayu", text: "Tentu Made, ini untukmu. Semangat kebersamaan!", side: "right" },
+                    { character: "Kakek Wayan", text: "Nah, itulah semangat Megibung, saling membantu.", side: "right" }
+                ],
+                vocab: [
+                    { term: "Sate Lilit", meaning: "Daging cincang yang dibumbui lalu dililitkan pada tusuk sate bambu lebar atau batang serai." },
+                    { term: "Saling Asah Asih Asuh", meaning: "Filsafat hidup Bali: saling mencerdaskan, saling menyayangi, dan saling menjaga." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Gusti Ayu membantu mengambilkan lauk pauk",
+                    ikon: "🍢🤲😊",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "math",
+                    question: "Matematika Adil Sate Lilit 🍢",
+                    instruction: "Ada 24 tusuk sate lilit di atas piring anyaman bambu (Gibungan). Jika satu kelompok Megibung beranggotakan 8 orang, berapa tusuk sate maksimal yang boleh diambil setiap orang agar adil merata?",
+                    answer: 3
+                }
+            },
+            {
+                page: 8,
+                title: "Pelajaran Berharga",
+                narration: "Acara Megibung selesai. Semua terlihat bahagia.",
+                dialogues: [
+                    { character: "Wayan", text: "Sekarang aku tahu bahwa Megibung bukan hanya tentang makan bersama.", side: "left" },
+                    { character: "I Luh", text: "Tetapi juga tentang kebersamaan.", side: "right" },
+                    { character: "Gusti Ayu", text: "Dan saling menghormati.", side: "left" }
+                ],
+                vocab: [
+                    { term: "Harmonis", meaning: "Hubungan rukun antar sesama anggota kelompok masyarakat." },
+                    { term: "Guyub", meaning: "Kondisi kebersamaan yang hangat dan penuh rasa kekeluargaan." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Anak-anak dan warga tersenyum puas setelah bersantap",
+                    ikon: "😊🍽️✨",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Adab Setelah Makan Berselesai 🧹",
+                    instruction: "Apa tindakan terbaik yang harus dilakukan bersama-sama oleh anak-anak setelah seluruh santapan Megibung habis?",
+                    choices: [
+                        { text: "Langsung pergi bermain meninggalkan piring kotor", isCorrect: false },
+                        { text: "Bergotong-royong merapikan wadah sisa makanan dan membersihkan balai banjar", isCorrect: true },
+                        { text: "Menunggu orang tua membersihkan semuanya sendiri", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 9,
+                title: "Pesan untuk Generasi Muda",
+                narration: "Kakek memberikan pesan kepada anak-anak.",
+                dialogues: [
+                    { character: "Kakek Wayan", text: "Anak-anak, budaya adalah warisan yang sangat berharga.", side: "right" },
+                    { character: "Wayan", text: "Kami akan menjaga dan melestarikannya, Kek.", side: "left" },
+                    { character: "Kakek Wayan", text: "Bagus sekali. Budaya akan tetap hidup jika generasi muda mencintainya.", side: "right" }
+                ],
+                vocab: [
+                    { term: "Generasi Penerus", meaning: "Kelompok pemuda-pemudi yang berkewajiban merawat adat masa depan." },
+                    { term: "Melestarikan", meaning: "Upaya menjaga warisan budaya agar tidak hilang digerus zaman." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Kakek Wayan berbicara dengan penuh kasih",
+                    ikon: "🧓💬🌟",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "options",
+                    question: "Merawat Jati Diri Bangsa 🇮🇩",
+                    instruction: "Bagaimana cara terbaik generasi penerus bangsa agar tradisi kearifan lokal seperti Megibung ini tidak terancam punah?",
+                    choices: [
+                        { text: "Mempelajari maknanya, melestarikannya, dan mengamalkan nilai gotong royongnya", isCorrect: true },
+                        { text: "Mengabaikannya karena dianggap ketinggalan zaman", isCorrect: false },
+                        { text: "Hanya melaksanakannya jika diberikan imbalan uang", isCorrect: false }
+                    ]
+                }
+            },
+            {
+                page: 10,
+                title: "Penutup Keberhasilan",
+                narration: "Wayan dan teman-temannya pulang dengan hati gembira. Mereka bangga memiliki budaya Megibung sebagai warisan masyarakat Karangasem.",
+                dialogues: [
+                    { character: "Wayan", text: "Aku akan menceritakan Megibung kepada teman-teman di sekolah.", side: "left" },
+                    { character: "I Luh", text: "Aku juga!", side: "right" },
+                    { character: "Made", text: "Ayo lestarikan budaya Karangasem!", side: "left" },
+                    { character: "Gusti Ayu", text: "Bersama kita jaga tradisi!", side: "right" },
+                    { character: "Bersama-sama", text: "Ayo lestarikan budaya Karangasem!", side: "left" }
+                ],
+                vocab: [
+                    { term: "Lestari", meaning: "Kondisi budaya yang tetap ada, terjaga, dan hidup di tengah masyarakat." },
+                    { term: "Bangga", meaning: "Perasaan senang dan terhormat atas kepemilikan kearifan lokal luhur." }
+                ],
+                defaultIlustrasi: {
+                    deskripsi: "Suasana bahagia sambil melambaikan tangan bersama warga",
+                    ikon: "🏡🎉❤️",
+                    gambar: null
+                },
+                puzzle: {
+                    type: "finish",
+                    question: "Selamat! Pembelajaran Selesai 🏆",
+                    instruction: "Kamu telah menjawab seluruh teka-teki moral adat Megibung dengan sempurna! Silakan klik tombol klaim sertifikat kehormatan di bawah ini.",
+                    btnLabel: "Ambil Sertifikat Kebudayaan 📜"
+                }
+            }
+        ];
 
-        // Konfigurasi Database Hubungkan ke Backend Awan Firebase
-        const firebaseConfig = {
-            apiKey: "", // Kosongkan secara aman, sistem akan mendeteksi otomatis dan beralih ke Mode Offline Lokal
-            authDomain: "megibung-edu.firebaseapp.com",
-            projectId: "megibung-edu",
-            storageBucket: "megibung-edu.appspot.com",
-            messagingSenderId: "1234567890",
-            appId: "1:1234567890:web:1234567890"
+        // Metadata Karakter Avatars
+        const CHARACTER_META = {
+            "I Luh": { emoji: "👩🏽", color: "bg-pink-100 border-pink-400 text-pink-700" },
+            "Wayan": { emoji: "👦🏽", color: "bg-blue-100 border-blue-400 text-blue-700" },
+            "Gusti Ayu": { emoji: "👩🏽‍🌾", color: "bg-purple-100 border-purple-400 text-purple-700" },
+            "Made": { emoji: "👨🏽‍🍳", color: "bg-amber-100 border-amber-400 text-amber-700" },
+            "Kakek Wayan": { emoji: "👴🏽", color: "bg-stone-200 border-stone-500 text-stone-700" },
+            "Mbok Gek": { emoji: "👩🏽‍🦱", color: "bg-red-100 border-red-400 text-red-700" },
+            "Bli De": { emoji: "👨🏽‍💼", color: "bg-teal-100 border-teal-400 text-teal-700" },
+            "Mbok Gek & Bli De": { emoji: "👥", color: "bg-indigo-100 border-indigo-400 text-indigo-700" },
+            "Bersama-sama": { emoji: "👥", color: "bg-orange-100 border-orange-400 text-orange-700" }
         };
 
-        // Detektor Status Aktif Firebase
-        let isFirebaseActive = false;
-        let app = null;
-        let db = null;
-        let auth = null;
+        // State Global Aplikasi
+        let currentRole = 'siswa'; // 'siswa' | 'admin'
+        let currentUsername = 'Tamu';
+        let currentPageIdx = 0; // Halaman aktif (0-9)
+        let adminSelectedPageIdx = 0; // Halaman yang sedang diedit di panel admin
+        let illustrationsState = []; // Menyimpan kustomisasi visual dari localStorage / default
+        
+        // State Kuis Gamifikasi Terhadap Setiap Halaman
+        let quizProgress = {}; // Format: { 0: true, 1: false, ... } yang menyimpan status kelulusan tiap bab
 
-        // Inisialisasi Firebase secara aman untuk menghindari crash akibat API Key kosong
-        if (firebaseConfig.apiKey && firebaseConfig.apiKey.trim() !== "") {
-            try {
-                app = initializeApp(firebaseConfig);
-                auth = getAuth(app);
-                db = getFirestore(app);
-                isFirebaseActive = true;
-            } catch (err) {
-                console.warn("Gagal menginisialisasi Firebase SDK:", err);
-            }
-        }
-
-        // State Global Sinkronisasi Real-Time
-        let studentsListCache = [];
-
-        // Hubungkan Sesi Otentikasi Anonim untuk Melacak Log Aktivitas Siswa
-        async function connectBackend() {
-            if (!isFirebaseActive) {
-                console.log("⚠️ API Key Firebase tidak dikonfigurasi. Menggunakan Mode Offline.");
-                const syncBadge = document.getElementById('sync-badge');
-                if (syncBadge) {
-                    syncBadge.innerHTML = "🟡 Mode Sinkron: Offline (Lokal)";
-                    syncBadge.className = "bg-amber-950 border border-amber-600 text-amber-300 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold";
-                }
-                // Muat data lokal secara aman untuk simulasi
-                setupOfflineSimulators();
-                return;
-            }
-
-            try {
-                if (auth) {
-                    await signInAnonymously(auth);
-                    console.log("🟢 Koneksi Backend Berhasil!");
-                    const syncBadge = document.getElementById('sync-badge');
-                    if (syncBadge) {
-                        syncBadge.innerHTML = "🟢 Realtime Sync: Aktif";
-                        syncBadge.className = "bg-emerald-900 border border-emerald-600 text-emerald-300 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold";
-                    }
-                    setupRealtimeListeners();
-                }
-            } catch (err) {
-                console.warn("⚠️ Gagal menyambungkan ke awan. Mode Offline diaktifkan.", err);
-                const syncBadge = document.getElementById('sync-badge');
-                if (syncBadge) {
-                    syncBadge.innerHTML = "🔴 Mode Sinkron: Gangguan Jaringan";
-                    syncBadge.className = "bg-rose-900 border border-rose-600 text-rose-300 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold";
-                }
-                setupOfflineSimulators();
-            }
-        }
-
-        // Jalankan Koneksi saat halaman siap
-        window.addEventListener('DOMContentLoaded', () => {
-            connectBackend();
+        // Inisialisasi Aplikasi Saat Selesai Dimuat
+        window.addEventListener('DOMContentLoaded', async () => {
+            await initIllustrationsState();
+            setupKeyboardNavigation();
         });
 
-        // Simulator Data Offline Lokal saat Firebase dinonaktifkan
-        function setupOfflineSimulators() {
-            // Muat hasil belajar lokal dari localStorage
-            const localResults = JSON.parse(localStorage.getItem('local_student_results') || '[]');
-            studentsListCache = localResults;
-            renderStudentResultsTable(localResults);
-        }
-
-        // Fungsi Pembantu Render Tabel Nilai Siswa
-        function renderStudentResultsTable(list) {
-            const tbody = document.getElementById('student-live-tbody');
-            if (!tbody) return;
-            tbody.innerHTML = "";
-
-            if (!list || list.length === 0) {
-                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-stone-500">Belum ada aktivitas siswa yang masuk.</td></tr>`;
-                return;
-            }
-
-            list.forEach((student) => {
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-amber-50/50 transition-all";
-                tr.innerHTML = `
-                    <td class="p-3 font-bold text-amber-900">${student.name || 'Siswa'}</td>
-                    <td class="p-3">Halaman ${student.currentPage || 1}</td>
-                    <td class="p-3 text-center font-bold text-emerald-600">${student.solvedCount || 0} / 10</td>
-                    <td class="p-3 text-center">
-                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${student.graduated ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
-                            ${student.graduated ? '🏆 Lulus' : '⏳ Belajar'}
-                        </span>
-                    </td>
-                    <td class="p-3 text-slate-500 font-mono text-[10px]">${student.timestamp || '-'}</td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        // --- MENGHUBUNGKAN LISTENERS REALTIME ---
-        function setupRealtimeListeners() {
-            if (!isFirebaseActive || !db) return;
-
-            // 1. Sinkronisasi Kustomisasi Gambar dari Guru ke Siswa secara Real-Time
-            const illustrationsCol = collection(db, 'illustrations');
-            onSnapshot(illustrationsCol, (snapshot) => {
-                snapshot.forEach((doc) => {
-                    const data = doc.data();
-                    const pageNum = parseInt(doc.id.replace('page_', ''));
-                    if (!isNaN(pageNum) && illustrationsState[pageNum]) {
-                        illustrationsState[pageNum].gambar = data.gambar;
-                        illustrationsState[pageNum].deskripsi = data.deskripsi;
-                        illustrationsState[pageNum].ikon = data.ikon;
-                    }
-                });
-                renderComicPage();
-            });
-
-            // 2. Sinkronisasi Daftar Nilai & Progress Siswa (Terbaca langsung di Panel Guru)
-            const studentResultsCol = collection(db, 'student_results');
-            onSnapshot(studentResultsCol, (snapshot) => {
-                const tbody = document.getElementById('student-live-tbody');
-                tbody.innerHTML = "";
-                studentsListCache = [];
-
-                if (snapshot.empty) {
-                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Belum ada aktivitas siswa yang masuk.</td></tr>`;
+        // Pengaturan Awal Ilustrasi dari Firebase (dengan fallback localStorage)
+        async function initIllustrationsState() {
+            try {
+                const firebaseData = await window.fbLoadIllustrations();
+                if (firebaseData && Array.isArray(firebaseData) && firebaseData.length > 0) {
+                    illustrationsState = firebaseData;
+                    console.log("Ilustrasi dimuat dari Firebase.");
                     return;
                 }
-
-                snapshot.forEach((doc) => {
-                    const student = doc.data();
-                    studentsListCache.push(student);
-                });
-                renderStudentResultsTable(studentsListCache);
-            });
-        }
-
-        // --- MEMPERBARUI PERKEMBANGAN SISWA KE AWAN ---
-        window.syncProgressToCloud = async function(isGraduated = false) {
-            if (currentRole !== 'siswa') return;
-
-            let solvedCount = 0;
-            COMIC_STORY.forEach((story, idx) => {
-                if (quizProgress[idx] === true) solvedCount++;
-            });
-
-            const payload = {
-                name: currentUsername,
-                currentPage: currentPageIdx + 1,
-                solvedCount: solvedCount,
-                graduated: isGraduated,
-                timestamp: new Date().toLocaleTimeString()
-            };
-
-            // Selalu simpan secara lokal terlebih dahulu
-            let localResults = JSON.parse(localStorage.getItem('local_student_results') || '[]');
-            const existingIdx = localResults.findIndex(r => r.name === currentUsername);
-            if (existingIdx > -1) {
-                localResults[existingIdx] = payload;
-            } else {
-                localResults.push(payload);
+            } catch (e) {
+                console.warn("Firebase tidak tersedia, coba localStorage...", e);
             }
-            localStorage.setItem('local_student_results', JSON.stringify(localResults));
-            studentsListCache = localResults;
-
-            // Jika offline, perbarui tampilan tabel lokal secara langsung
-            if (!isFirebaseActive) {
-                renderStudentResultsTable(localResults);
-                return;
-            }
-
-            // Kirim data ke awan Firebase jika aktif
-            try {
-                const userId = auth && auth.currentUser ? auth.currentUser.uid : 'offline-user';
-                const recordRef = doc(db, 'student_results', userId);
-                await setDoc(recordRef, payload, { merge: true });
-            } catch (err) {
-                console.error("Gagal mengirim progres ke awan: ", err);
-            }
-        };
-
-        // --- ADMINISTRATOR MENGUNGGAH PERUBAHAN KE AWAN ---
-        window.saveCurrentPageChanges = async function() {
-            const descValue = document.getElementById('admin-desc-input').value.trim();
-            const emojiValue = document.getElementById('admin-emoji-input').value.trim();
-
-            if (!descValue) {
-                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
-                showToast("Deskripsi ilustrasi tidak boleh kosong!", "error");
-                return;
-            }
-
-            // Simpan lokal terlebih dahulu
-            illustrationsState[adminSelectedPageIdx].deskripsi = descValue;
-            illustrationsState[adminSelectedPageIdx].ikon = emojiValue || "🌸";
-            saveToLocalStorage();
-
-            // Segera perbarui layar komik aktif jika sedang mengedit halaman yang sama
-            if (currentPageIdx === adminSelectedPageIdx) {
-                renderComicPage();
-            }
-
-            // Jika offline, beri tahu bahwa disimpan secara lokal
-            if (!isFirebaseActive || !db) {
-                synth.playSuccess();
-                showToast(`Kustomisasi visual Halaman ${adminSelectedPageIdx + 1} disimpan secara lokal!`, "success");
-                return;
-            }
-
-            // Unggah ke Firestore Real-Time Database jika online
-            try {
-                const pageDocId = `page_${adminSelectedPageIdx}`;
-                const docRef = doc(db, 'illustrations', pageDocId);
-
-                const payload = {
-                    gambar: illustrationsState[adminSelectedPageIdx].gambar,
-                    deskripsi: descValue,
-                    ikon: emojiValue || "🌸",
-                    timestamp: new Date().toLocaleTimeString()
-                };
-
-                await setDoc(docRef, payload, { merge: true });
-                synth.playSuccess();
-                showToast(`Kustomisasi visual Halaman ${adminSelectedPageIdx + 1} berhasil diunggah ke awan!`, "success");
-            } catch (err) {
-                console.error("Gagal mengunggah perubahan ke awan: ", err);
-                showToast("Gagal menyimpan ke awan. Disimpan secara lokal saja.", "error");
-            }
-        };
-
-        // --- EVALUASI SISWA BERBASIS AI CHAT (GEMINI CHATBOT INTEGRATION) ---
-        // Mekanisme Panggilan Aman Gemini API dengan Exponential Backoff
-        async function callGemini(payload) {
-            const apiKey = ""; // Otomatis terpasang oleh platform runtime
-            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
-            let delay = 1000;
-            
-            for (let i = 0; i < 5; i++) {
+            // Fallback: localStorage
+            const savedData = localStorage.getItem('komikIlustrasi');
+            if (savedData) {
                 try {
-                    const response = await fetch(url, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify(payload)
-                    });
-                    if (response.ok) {
-                        return await response.json();
-                    }
+                    illustrationsState = JSON.parse(savedData);
+                    return;
                 } catch (e) {
-                    // Penanganan eror teredam
+                    console.error("Gagal membaca localStorage.", e);
                 }
-                await new Promise(resolve => setTimeout(resolve, delay));
-                delay *= 2;
             }
-            throw new Error("Kakek sedang lelah berjalan. Silakan bertanya beberapa saat lagi, ya.");
+            loadDefaultIllustrations();
         }
 
-        // Mengirim Chatbot Tanya Kakek Wayan AI
-        window.handleSendAIChat = async function() {
-            const inputEl = document.getElementById('ai-chat-input');
-            const chatHistoryEl = document.getElementById('ai-chat-history');
-            const loaderEl = document.getElementById('ai-chat-loading');
-            const question = inputEl.value.trim();
-
-            if (!question) return;
-
-            // Tempelkan input chat siswa di layar
-            const userMsgDiv = document.createElement('div');
-            userMsgDiv.className = "text-slate-200 leading-relaxed mt-1 border-t border-emerald-800/40 pt-1.5 text-xs";
-            userMsgDiv.innerHTML = `👤 <strong>Kamu:</strong> ${question}`;
-            chatHistoryEl.appendChild(userMsgDiv);
-            
-            inputEl.value = '';
-            chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
-
-            loaderEl.classList.remove('hidden');
-            synth.playBeep(450, 'sine', 0.1, 0.1);
-
-            // Susun instruksi pengkondisian karakter (System Prompt)
-            const systemPrompt = "Kamu adalah Kakek Wayan, sesepuh adat bijaksana dari desa di Karangasem, Bali. Panggillah lawan bicaramu dengan panggilan penyayang seperti 'Cucu Kakek', 'Cucuku', 'Anakku'. Kamu berbicara dengan bahasa Indonesia yang sangat hangat, ramah, sesekali menyisipkan istilah sopan bahasa Bali (seperti 'Nggih', 'Matur Suksma', 'Mebasa Bali') dan menerjemahkannya dengan santun. Fokuslah memberikan bimbingan tentang adab Megibung, etika kemasyarakatan, keadilan porsi makan, saling asah-asih-asuh, toleransi, dan pelestarian budaya lokal di Karangasem. Jawab dengan ringkas (maksimal 3-4 kalimat).";
-
-            const payload = {
-                contents: [{
-                    parts: [{ text: `Pertanyaan dari siswa bernama ${currentUsername || 'Tamu'}: ${question}` }]
-                }],
-                systemInstruction: {
-                    parts: [{ text: systemPrompt }]
-                }
-            };
-
+        // Pengaturan Progres Kuis dari Firebase
+        async function initQuizProgress(username) {
             try {
-                const responseData = await callGemini(payload);
-                const replyText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "Aduh Cucuku, Kakek agak lupa. Coba tanya lagi ya, nggih?";
-                
-                const aiMsgDiv = document.createElement('div');
-                aiMsgDiv.className = "text-amber-300 font-medium leading-relaxed mt-1 border-t border-emerald-800/40 pt-1.5 text-xs";
-                aiMsgDiv.innerHTML = `👵🏽 <strong>Kakek Wayan:</strong> ${replyText}`;
-                chatHistoryEl.appendChild(aiMsgDiv);
-                
-                synth.playSuccess();
-            } catch (err) {
-                const errorMsgDiv = document.createElement('div');
-                errorMsgDiv.className = "text-rose-400 font-semibold text-[10px] mt-1 italic";
-                errorMsgDiv.innerHTML = `⚠️ ${err.message}`;
-                chatHistoryEl.appendChild(errorMsgDiv);
-                synth.playError();
-            } finally {
-                loaderEl.classList.add('hidden');
-                chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+                const firebaseData = await window.fbLoadQuizProgress(username);
+                if (firebaseData && typeof firebaseData === 'object') {
+                    quizProgress = firebaseData;
+                    console.log("Progres kuis dimuat dari Firebase.");
+                    return;
+                }
+            } catch (e) {
+                console.warn("Firebase tidak tersedia, coba localStorage...", e);
             }
-        };
+            // Fallback: localStorage
+            const savedQuiz = localStorage.getItem('komikQuizProgress');
+            if (savedQuiz) {
+                try {
+                    quizProgress = JSON.parse(savedQuiz);
+                    return;
+                } catch (e) {
+                    quizProgress = {};
+                }
+            } else {
+                quizProgress = {};
+            }
+        }
 
-        // Analisis Hasil Belajar Siswa Berbasis AI Guru Dashboard
-        window.handleAIAnalyzeStudents = async function() {
-            const loaderEl = document.getElementById('ai-evaluation-loading');
-            const resultEl = document.getElementById('ai-evaluation-result');
+        function saveQuizProgress() {
+            // Simpan ke Firebase (async, tidak perlu ditunggu)
+            if (window.fbSaveQuizProgress && currentUsername) {
+                window.fbSaveQuizProgress(currentUsername, quizProgress);
+            }
+            // Tetap simpan localStorage sebagai cache offline
+            localStorage.setItem('komikQuizProgress', JSON.stringify(quizProgress));
+        }
 
-            if (studentsListCache.length === 0) {
-                showToast("Belum ada data aktivitas siswa untuk dianalisis oleh AI!", "error");
+        // Memuat Konfigurasi Ilustrasi Default
+        function loadDefaultIllustrations() {
+            illustrationsState = COMIC_STORY.map(page => ({
+                page: page.page,
+                deskripsi: page.defaultIlustrasi.deskripsi,
+                ikon: page.defaultIlustrasi.ikon,
+                gambar: page.defaultIlustrasi.gambar
+            }));
+            saveToLocalStorage();
+        }
+
+        function saveToLocalStorage() {
+            // Simpan ke Firebase (async)
+            if (window.fbSaveIllustrations) {
+                window.fbSaveIllustrations(illustrationsState);
+            }
+            // Tetap simpan localStorage sebagai cache offline
+            localStorage.setItem('komikIlustrasi', JSON.stringify(illustrationsState));
+        }
+
+        // Alur Login - Berpindah Panel Form
+        function switchLoginMode(mode) {
+            synth.playClick();
+            document.getElementById('login-selection').classList.add('hidden');
+            if (mode === 'siswa') {
+                document.getElementById('form-siswa').classList.remove('hidden');
+            } else if (mode === 'admin') {
+                document.getElementById('form-admin').classList.remove('hidden');
+            }
+        }
+
+        function backToSelection() {
+            synth.playClick();
+            document.getElementById('form-siswa').classList.add('hidden');
+            document.getElementById('form-admin').classList.add('hidden');
+            document.getElementById('login-selection').classList.remove('hidden');
+        }
+
+        // Submit Form Login Siswa
+        async function submitSiswaLogin() {
+            const nameInput = document.getElementById('siswa-name-input').value.trim();
+            if (nameInput.length < 2) {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Nama siswa minimal 2 karakter!", "error");
+                return;
+            }
+            
+            currentRole = 'siswa';
+            currentUsername = nameInput;
+            
+            await enterApp();
+            showToast(`Halo ${currentUsername}! Selamat belajar adat Megibung.`, "success");
+        }
+
+        // Submit Form Login Admin
+        async function submitAdminLogin() {
+            const adminName = document.getElementById('admin-name-input').value.trim();
+            const adminPass = document.getElementById('admin-pass-input').value;
+
+            if (adminName.length < 2) {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Nama panggilan guru wajib diisi!", "error");
                 return;
             }
 
-            loaderEl.classList.remove('hidden');
-            resultEl.classList.add('hidden');
-            synth.playBeep(520, 'triangle', 0.2, 0.15);
-
-            // Susun rekap data siswa dalam format string terstruktur
-            const studentsDataString = studentsListCache.map(s => 
-                `- Nama: ${s.name}, Halaman Aktif: ${s.currentPage}/10, Tantangan Terselesaikan: ${s.solvedCount}/10, Lulus: ${s.graduated ? 'Ya' : 'Belum'}`
-            ).join('\n');
-
-            const systemPrompt = "Kamu adalah Asisten Kurikulum Merdeka & Analis PjBL (Project Based Learning) Cerdas. Tugasmu adalah menganalisis data rekap kemajuan belajar siswa dalam mempelajari tradisi Megibung Karangasem. Buat laporan evaluasi singkat terstruktur dalam bahasa Indonesia yang memuat: 1) Analisis umum tingkat pemahaman kognitif siswa, 2) Perkembangan karakter sosial (Gotong Royong, Kesetaraan, Kerja Sama), dan 3) Rekomendasi konkret bagi guru untuk tindak lanjut pengajaran berbasis Discovery Learning di kelas nyata.";
-
-            const payload = {
-                contents: [{
-                    parts: [{ text: `Berikut adalah data aktivitas riil siswa saat ini:\n${studentsDataString}` }]
-                }],
-                systemInstruction: {
-                    parts: [{ text: systemPrompt }]
-                }
-            };
-
-            try {
-                const responseData = await callGemini(payload);
-                const reportText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "Gagal menyusun ringkasan evaluasi otomatis.";
-                
-                resultEl.innerText = reportText;
-                resultEl.classList.remove('hidden');
-                resultEl.scrollTop = 0;
-                synth.playSuccess();
-                showToast("Analisis laporan PjBL cerdas AI berhasil disintesis!", "success");
-            } catch (err) {
-                resultEl.innerText = `⚠️ Terjadi kendala saat menghubungi AI: ${err.message}`;
-                resultEl.classList.remove('hidden');
-                synth.playError();
-            } finally {
-                loaderEl.classList.add('hidden');
-            }
-        };
-    </script>
-
-    <!-- AVATAR PROFILE GENERATION SYSTEM (Menyelaraskan Sesuai Foto "Salinan COMIC SERUNYA BELAJAR DI KEBUN.jpg") -->
-    <script>
-        // Membuat Vector Avatar SVG dinamis yang akurat sesuai busana adat bali madya
-        function getCharacterAvatarSVG(name) {
-            const colorMeta = CHARACTER_META[name] ? CHARACTER_META[name].color : "bg-stone-100";
-            
-            // Menggambar visual yang tepat berdasarkan ciri-ciri tokoh di dalam komik
-            let balineseVisual = "";
-
-            if (name === "Wayan") {
-                // Gadis dengan kuncup bunga kamboja kuning di telinga kiri, baju kebaya putih, ikat selendang kuning
-                balineseVisual = `
-                    <svg viewBox="0 0 100 100" class="w-full h-full">
-                        <!-- Head & Hair -->
-                        <circle cx="50" cy="50" r="30" fill="#f5c1a1"/>
-                        <path d="M 20 40 Q 50 15 80 40 Q 50 25 20 40 Z" fill="#312217"/>
-                        <circle cx="50" cy="22" r="12" fill="#312217"/> <!-- Hair Sanggul Pusung Tagel -->
-                        <!-- Kamboja Flower -->
-                        <circle cx="28" cy="38" r="6" fill="#fff" />
-                        <circle cx="28" cy="38" r="2.5" fill="#f59e0b" />
-                        <!-- Face Features -->
-                        <circle cx="42" cy="50" r="3" fill="#2d1c10" />
-                        <circle cx="58" cy="50" r="3" fill="#2d1c10" />
-                        <path d="M 45 60 Q 50 65 55 60" stroke="#2d1c10" stroke-width="2" fill="none" />
-                        <!-- Kebaya & Sash -->
-                        <path d="M 25 80 L 75 80 L 65 100 L 35 100 Z" fill="#faf5ff" />
-                        <rect x="35" y="90" width="30" height="6" fill="#fbbf24" /> <!-- Yellow sash -->
-                    </svg>
-                `;
-            } else if (name === "I Luh") {
-                // Gadis bermahkota adat emas, kebaya cokelat muda/krem
-                balineseVisual = `
-                    <svg viewBox="0 0 100 100" class="w-full h-full">
-                        <circle cx="50" cy="50" r="30" fill="#f5c1a1"/>
-                        <path d="M 20 40 Q 50 15 80 40" fill="#312217" />
-                        <!-- Gold Crown (Mahkota Adat) -->
-                        <path d="M 30 30 L 50 10 L 70 30 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" />
-                        <circle cx="50" cy="10" r="3" fill="#f43f5e" />
-                        <!-- Face -->
-                        <circle cx="42" cy="50" r="3" fill="#2d1c10" />
-                        <circle cx="58" cy="50" r="3" fill="#2d1c10" />
-                        <path d="M 45 60 Q 50 65 55 60" stroke="#2d1c10" stroke-width="2" fill="none" />
-                        <!-- Kebaya -->
-                        <path d="M 25 80 L 75 80 L 65 100 L 35 100 Z" fill="#fed7aa" />
-                        <rect x="35" y="92" width="30" height="5" fill="#f43f5e" /> <!-- Maroon sash -->
-                    </svg>
-                `;
-            } else if (name === "Mbok Gek") {
-                // Gadis bermahkota bunga mawar merah, baju kebaya hitam
-                balineseVisual = `
-                    <svg viewBox="0 0 100 100" class="w-full h-full">
-                        <circle cx="50" cy="50" r="30" fill="#f5c1a1"/>
-                        <path d="M 20 40 Q 50 15 80 40" fill="#312217" />
-                        <circle cx="30" cy="25" r="5" fill="#f43f5e" /> <!-- Red rose flower in hair -->
-                        <!-- Face -->
-                        <circle cx="42" cy="50" r="3" fill="#2d1c10" />
-                        <circle cx="58" cy="50" r="3" fill="#2d1c10" />
-                        <path d="M 45 60 Q 50 65 55 60" stroke="#2d1c10" stroke-width="2" fill="none" />
-                        <!-- Black Kebaya -->
-                        <path d="M 25 80 L 75 80 L 65 100 L 35 100 Z" fill="#1e293b" />
-                        <rect x="35" y="92" width="30" height="5" fill="#fbbf24" /> <!-- Golden sash -->
-                    </svg>
-                `;
-            } else if (name === "Gusti Ayu") {
-                // Gadis berkebaya putih bersih, ikat kain merah muda
-                balineseVisual = `
-                    <svg viewBox="0 0 100 100" class="w-full h-full">
-                        <circle cx="50" cy="50" r="30" fill="#f5c1a1"/>
-                        <path d="M 20 40 Q 50 15 80 40" fill="#312217" />
-                        <circle cx="70" cy="25" r="5" fill="#fbbf24" /> <!-- Yellow flower -->
-                        <!-- Face -->
-                        <circle cx="42" cy="50" r="3" fill="#2d1c10" />
-                        <circle cx="58" cy="50" r="3" fill="#2d1c10" />
-                        <path d="M 45 60 Q 50 65 55 60" stroke="#2d1c10" stroke-width="2" fill="none" />
-                        <!-- White Kebaya -->
-                        <path d="M 25 80 L 75 80 L 65 100 L 35 100 Z" fill="#f8fafc" />
-                        <rect x="35" y="92" width="30" height="5" fill="#ec4899" /> <!-- Pink sash -->
-                    </svg>
-                `;
-            } else if (name === "Bli De") {
-                // Pria tampan ber-Udeng putih ikat kepala, kemeja safari putih daster kancing rapi
-                balineseVisual = `
-                    <svg viewBox="0 0 100 100" class="w-full h-full">
-                        <circle cx="50" cy="54" r="28" fill="#f5c1a1"/>
-                        <!-- White Udeng (Balinese traditional headband) -->
-                        <rect x="20" y="26" width="60" height="10" fill="#ffffff" rx="3" />
-                        <path d="M 45 26 L 50 10 L 55 26 Z" fill="#ffffff" /> <!-- Udeng knot knot -->
-                        <!-- Face -->
-                        <circle cx="40" cy="54" r="3" fill="#2d1c10" />
-                        <circle cx="60" cy="54" r="3" fill="#2d1c10" />
-                        <path d="M 45 66 Q 50 70 55 66" stroke="#2d1c10" stroke-width="2" fill="none" />
-                        <!-- White Safari Shirt -->
-                        <path d="M 22 84 L 78 84 L 70 100 L 30 100 Z" fill="#ffffff" />
-                        <line x1="50" y1="84" x2="50" y2="100" stroke="#d97706" stroke-width="1.5" /> <!-- Gold buttons line -->
-                    </svg>
-                `;
-            } else if (name === "Kakek Wayan") {
-                // Tetua adat bijaksana dengan Udeng putih, kumis tipis putih ramah, kemeja putih safari, ikat pinggang kuning emas
-                balineseVisual = `
-                    <svg viewBox="0 0 100 100" class="w-full h-full">
-                        <circle cx="50" cy="54" r="28" fill="#fcd34d" opacity="0.3"/> <!-- Background glow -->
-                        <circle cx="50" cy="54" r="28" fill="#f6d3b9"/>
-                        <!-- White Udeng -->
-                        <rect x="18" y="26" width="64" height="11" fill="#f8fafc" rx="3" stroke="#e2e8f0" />
-                        <path d="M 44 26 L 50 8 L 56 26 Z" fill="#f8fafc" />
-                        <!-- Elderly Eyebrows & Eyes -->
-                        <path d="M 34 46 Q 40 43 44 47" stroke="#94a3b8" stroke-width="2.5" fill="none" />
-                        <path d="M 56 47 Q 60 43 66 46" stroke="#94a3b8" stroke-width="2.5" fill="none" />
-                        <circle cx="40" cy="54" r="3" fill="#2d1c10" />
-                        <circle cx="60" cy="54" r="3" fill="#2d1c10" />
-                        <!-- Mustache (Kumis Putih Ramah) -->
-                        <path d="M 38 64 Q 50 60 62 64" stroke="#e2e8f0" stroke-width="3" fill="none" stroke-linecap="round" />
-                        <path d="M 45 70 Q 50 73 55 70" stroke="#2d1c10" stroke-width="1.5" fill="none" />
-                        <!-- Shirt -->
-                        <path d="M 22 84 L 78 84 L 70 100 L 30 100 Z" fill="#ffffff" />
-                        <rect x="30" y="88" width="40" height="6" fill="#fbbf24" /> <!-- Golden belt -->
-                    </svg>
-                `;
-            } else {
-                // Gabungan beberapa warga desa
-                balineseVisual = `
-                    <svg viewBox="0 0 100 100" class="w-full h-full">
-                        <circle cx="35" cy="50" r="20" fill="#f5c1a1"/>
-                        <circle cx="65" cy="50" r="20" fill="#e6a480"/>
-                        <circle cx="35" cy="50" r="2" fill="#000" /><circle cx="65" cy="50" r="2" fill="#000" />
-                        <path d="M 20 80 Q 50 50 80 80" fill="#d97706" />
-                    </svg>
-                `;
+            if (adminPass !== 'admin123') {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Kata sandi salah! Coba sandi 'admin123'.", "error");
+                return;
             }
 
-            return `<div class="w-full h-full rounded-full overflow-hidden border-2 border-[#3b2314] bg-[#fdfaf6] flex items-center justify-center p-0.5">${balineseVisual}</div>`;
+            currentRole = 'admin';
+            currentUsername = `${adminName} (Guru)`;
+
+            await enterApp();
+            showToast(`Akses Admin Guru berhasil diverifikasi!`, "success");
         }
-    </script>
 
-    <!-- MEMPERBARUI BALON KATA SPEECH BUBBLE DENGAN FOTO PROFIL SVG BARU -->
-    <script>
-        // Modifikasi fungsi render dialogues agar memanggil generator SVG di atas
-        window.renderDialogues = function(dialogues) {
+        // Masuk ke Komik
+        async function enterApp() {
+            synth.playGong();
+            document.getElementById('landing-page').classList.add('hidden');
+            document.getElementById('current-username-text').innerText = currentUsername;
+
+            // Muat progres kuis dari Firebase berdasarkan username
+            showToast("Memuat progres belajar...", "success");
+            await initQuizProgress(currentUsername);
+
+            // Catat sesi login ke Firebase
+            if (window.fbLogSession) {
+                window.fbLogSession(currentUsername, currentRole);
+            }
+
+            if (currentRole === 'admin') {
+                document.getElementById('admin-panel-section').classList.remove('hidden');
+                initAdminPanel();
+            } else {
+                document.getElementById('admin-panel-section').classList.add('hidden');
+            }
+
+            currentPageIdx = 0;
+            renderComicPage();
+        }
+
+        // Sesi Keluar / Logout
+        function handleLogout() {
+            synth.playBeep(180, 'sawtooth', 0.3, 0.1);
+            document.getElementById('siswa-name-input').value = "";
+            document.getElementById('admin-name-input').value = "";
+            document.getElementById('admin-pass-input').value = "";
+            
+            document.getElementById('landing-page').classList.remove('hidden');
+            document.getElementById('login-selection').classList.remove('hidden');
+            document.getElementById('form-siswa').classList.add('hidden');
+            document.getElementById('form-admin').classList.add('hidden');
+            
+            showToast("Berhasil keluar sesi belajar.", "success");
+        }
+
+        // --- STREAMING_CHUNK: Menyusun mesin render halaman komik... ---
+        function renderComicPage() {
+            const pageData = COMIC_STORY[currentPageIdx];
+            const activeIllust = illustrationsState[currentPageIdx];
+
+            // Render Judul & Navigasi Atas
+            document.getElementById('comic-pane-title').innerText = `${pageData.page}. ${pageData.title}`;
+            document.getElementById('page-counter').innerText = `Halaman ${pageData.page} / 10`;
+
+            // Render Narasi
+            document.getElementById('narration-text').innerText = pageData.narration;
+
+            // Render Area Ilustrasi (Menentukan render gambar unggahan atau fallback emoji)
+            const mediaContainer = document.getElementById('illustration-media');
+            const captionText = document.getElementById('illustration-caption');
+
+            mediaContainer.innerHTML = "";
+            captionText.innerText = activeIllust.deskripsi;
+
+            if (activeIllust.gambar) {
+                // Tampilkan gambar base64 yang sudah diunggah oleh Admin
+                const imgNode = document.createElement('img');
+                imgNode.src = activeIllust.gambar;
+                imgNode.alt = `Ilustrasi Halaman ${pageData.page}`;
+                imgNode.className = "max-w-[200px] max-h-[200px] object-contain rounded-xl border-3 border-[#3b2314] shadow-md bg-white p-1";
+                mediaContainer.appendChild(imgNode);
+            } else {
+                // Fallback Tampilkan Emoji
+                const emojiSpan = document.createElement('span');
+                emojiSpan.className = "text-7xl block tracking-widest py-4 drop-shadow-md";
+                emojiSpan.innerText = activeIllust.ikon || "🌸";
+                mediaContainer.appendChild(emojiSpan);
+            }
+
+            // Render Tombol Tokoh yang Aktif pada Halaman Ini
+            renderCharacterBadges(pageData);
+
+            // Render Dialog (Balon Kata Komik)
+            renderDialogues(pageData.dialogues);
+
+            // Render Glosarium Budaya Samping
+            renderVocabulary(pageData.vocab);
+
+            // Render Tantangan Kuis Gamifikasi Samping
+            renderInteractivePuzzle(pageData);
+
+            // Periksa Navigasi Kunci Batasan Halaman Pertama/Terakhir
+            checkNavigationLock();
+        }
+
+        // Render Badge Karakter yang sedang berbicara
+        function renderCharacterBadges(pageData) {
+            const badgeContainer = document.getElementById('character-badges');
+            badgeContainer.innerHTML = "";
+
+            // Menemukan daftar nama tokoh yang berbicara di halaman aktif ini
+            const activeSpeakers = new Set();
+            pageData.dialogues.forEach(diag => activeSpeakers.add(diag.character));
+
+            // Membuat badge untuk semua tokoh terdaftar
+            Object.keys(CHARACTER_META).forEach(charName => {
+                const isSpeaking = activeSpeakers.has(charName);
+                const char = CHARACTER_META[charName];
+                const badge = document.createElement('span');
+                
+                if (isSpeaking) {
+                    badge.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-[#3b2314] ${char.color} text-xs font-bold shadow-[2px_2px_0px_#3b2314] animate-pulse`;
+                    badge.innerHTML = `<span>${char.emoji}</span> <span>${charName}</span>`;
+                } else {
+                    badge.className = `flex items-center gap-1.5 px-3 py-1.5 rounded-full border-2 border-stone-200 bg-stone-100 text-stone-400 text-xs font-semibold opacity-50`;
+                    badge.innerHTML = `<span>${char.emoji}</span> <span>${charName}</span>`;
+                }
+                badgeContainer.appendChild(badge);
+            });
+        }
+
+        // Render Dialog dalam Balon Kata Komik
+        function renderDialogues(dialogues) {
             const container = document.getElementById('dialogues-container');
             container.innerHTML = "";
 
             dialogues.forEach(diag => {
                 const isLeft = diag.side === 'left';
-                
+                const char = CHARACTER_META[diag.character] || { emoji: "🧑🏽", color: "bg-stone-100 text-stone-700" };
+
                 const wrap = document.createElement('div');
                 wrap.className = `flex items-start gap-3 w-full my-1.5 ${isLeft ? 'flex-row' : 'flex-row-reverse'}`;
 
-                // Avatar Container khusus memanggil SVG Vektor Bali kustom
+                // Avatar Bulat Tokoh
                 const avatar = document.createElement('div');
-                avatar.className = `w-14 h-14 rounded-full flex items-center justify-center shadow-md shrink-0 transition-transform hover:scale-105`;
-                avatar.innerHTML = getCharacterAvatarSVG(diag.character);
+                avatar.className = `w-11 h-11 rounded-full flex items-center justify-center text-2xl shadow-md border-3 border-[#3b2314] ${char.color} shrink-0`;
+                avatar.innerText = char.emoji;
 
                 // Balon Kata
                 const bubble = document.createElement('div');
@@ -1204,19 +1292,445 @@
 
                 container.appendChild(wrap);
             });
-        };
+        }
 
-        // Fungsi kontrol membuka referensi drawer kustom
-        window.toggleReferenceDrawer = function() {
-            const drawer = document.getElementById("reference-drawer");
-            if (drawer.classList.contains("translate-x-full")) {
-                drawer.classList.remove("translate-x-full");
-                synth.playBeep(400, 'triangle', 0.1, 0.15);
+        // Render Glosarium Budaya Samping
+        function renderVocabulary(vocab) {
+            const container = document.getElementById('vocabulary-container');
+            container.innerHTML = "";
+
+            vocab.forEach(v => {
+                const item = document.createElement('div');
+                item.className = "p-3 bg-amber-50 rounded-xl border-2 border-[#3b2314] shadow-sm";
+                item.innerHTML = `
+                    <h5 class="text-xs font-extrabold text-amber-800 uppercase tracking-wide flex items-center gap-1">
+                        <i class="fa-solid fa-bookmark text-[10px]"></i> ${v.term}
+                    </h5>
+                    <p class="text-xs text-stone-700 mt-1 leading-relaxed">${v.meaning}</p>
+                `;
+                container.appendChild(item);
+            });
+        }
+
+        // --- CORE GAMIFICATION PUZZLE RENDER ---
+        let currentClickCounter = 0; // State bantuan lokal kuis ketuk
+
+        function renderInteractivePuzzle(pageData) {
+            const workspace = document.getElementById('gamified-workspace');
+            workspace.innerHTML = "";
+
+            const puzzle = pageData.puzzle;
+            if (!puzzle) return;
+
+            // Judul Kuis
+            const title = document.createElement('h4');
+            title.className = "text-sm font-black text-amber-900 uppercase tracking-wide mb-2";
+            title.innerText = puzzle.question;
+            workspace.appendChild(title);
+
+            // Deskripsi Panduan
+            const desc = document.createElement('p');
+            desc.className = "text-xs text-stone-700 leading-relaxed mb-4";
+            desc.innerText = puzzle.instruction;
+            workspace.appendChild(desc);
+
+            const isSolved = quizProgress[currentPageIdx] === true;
+
+            // Jika Kuis Telah Terjawab / Sukses Dilalui
+            if (isSolved) {
+                const solvedCard = document.createElement('div');
+                solvedCard.className = "p-4 bg-emerald-100 border-2 border-emerald-500 rounded-2xl text-emerald-800 text-xs font-bold flex flex-col items-center gap-2 shadow-inner";
+                solvedCard.innerHTML = `
+                    <span class="text-3xl">🎉</span>
+                    <span class="text-center">Tantangan Halaman Ini Berhasil Diselesaikan! Gerbang Halaman Selanjutnya Telah Terbuka.</span>
+                `;
+                workspace.appendChild(solvedCard);
+                return;
+            }
+
+            // Render Berdasarkan Jenis Kuis
+            if (puzzle.type === 'clicker') {
+                // Jenis Kuis: Ketuk Kulkul Berulang
+                const progressDiv = document.createElement('div');
+                progressDiv.className = "w-full bg-stone-200 border-2 border-[#3b2314] rounded-full h-4 mb-3 overflow-hidden shadow-inner relative";
+                
+                const progressFill = document.createElement('div');
+                progressFill.id = "kulkul-fill";
+                progressFill.className = "bg-amber-500 h-full w-0 transition-all duration-200";
+                progressDiv.appendChild(progressFill);
+                workspace.appendChild(progressDiv);
+
+                const btn = document.createElement('button');
+                btn.className = "w-full py-3 clay-btn-amber text-xs font-black uppercase flex items-center justify-center gap-2";
+                btn.innerHTML = `<i class="fa-solid fa-drum"></i> ${puzzle.btnLabel}`;
+                btn.onclick = () => {
+                    synth.playBeep(330, 'triangle', 0.15, 0.2);
+                    currentClickCounter++;
+                    const percent = (currentClickCounter / puzzle.target) * 100;
+                    document.getElementById('kulkul-fill').style.width = `${percent}%`;
+
+                    if (currentClickCounter >= puzzle.target) {
+                        currentClickCounter = 0;
+                        handlePuzzleSuccess();
+                    }
+                };
+                workspace.appendChild(btn);
+
+            } else if (puzzle.type === 'options' || puzzle.type === 'sela') {
+                // Jenis Kuis: Pilihan Ganda (Satu Jawaban Benar)
+                const optionsContainer = document.createElement('div');
+                optionsContainer.className = "flex flex-col gap-2";
+
+                puzzle.choices.forEach((choice, choiceIdx) => {
+                    const btn = document.createElement('button');
+                    btn.className = "w-full p-3 text-left bg-white hover:bg-amber-100/50 border-2 border-[#3b2314] rounded-xl text-xs font-bold transition-all flex items-center justify-between";
+                    btn.innerHTML = `<span>${choice.text}</span> <i class="fa-regular fa-circle text-stone-300"></i>`;
+                    
+                    btn.onclick = () => {
+                        if (choice.isCorrect) {
+                            handlePuzzleSuccess();
+                        } else {
+                            synth.playError();
+                            btn.className = "w-full p-3 text-left bg-rose-100 border-2 border-rose-500 rounded-xl text-xs font-bold text-rose-700 transition-all flex items-center justify-between";
+                            btn.innerHTML = `<span>${choice.text}</span> <i class="fa-solid fa-circle-xmark text-rose-500"></i>`;
+                            showToast("Jawabanmu kurang tepat, ayo baca lagi balon kata komiknya!", "error");
+                        }
+                    };
+                    optionsContainer.appendChild(btn);
+                });
+
+                workspace.appendChild(optionsContainer);
+
+            } else if (puzzle.type === 'math') {
+                // Jenis Kuis: Isian Matematika Adil
+                const mathDiv = document.createElement('div');
+                mathDiv.className = "flex flex-col gap-3";
+
+                const input = document.createElement('input');
+                input.type = "number";
+                input.id = "math-quiz-input";
+                input.placeholder = "Ketik jawaban angka...";
+                input.className = "w-full px-4 py-3 rounded-xl border-3 border-[#3b2314] text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-amber-500";
+                
+                const btn = document.createElement('button');
+                btn.className = "w-full py-3 clay-btn-amber text-xs font-bold uppercase";
+                btn.innerText = "Periksa Jawaban 📐";
+                btn.onclick = () => {
+                    const ans = parseInt(document.getElementById('math-quiz-input').value);
+                    if (ans === puzzle.answer) {
+                        handlePuzzleSuccess();
+                    } else {
+                        synth.playError();
+                        input.classList.add('border-rose-500', 'bg-rose-50');
+                        setTimeout(() => input.classList.remove('border-rose-500', 'bg-rose-50'), 1000);
+                        showToast("Hasil pembagianmu kurang adil! Silakan hitung kembali.", "error");
+                    }
+                };
+
+                mathDiv.appendChild(input);
+                mathDiv.appendChild(btn);
+                workspace.appendChild(mathDiv);
+
+            } else if (puzzle.type === 'finish') {
+                // Jenis Kuis: Penutup Selesai Komik
+                const btn = document.createElement('button');
+                btn.className = "w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black border-4 border-[#3b2314] rounded-2xl shadow-[4px_4px_0px_#3b2314] active:translate-y-1 active:shadow-none text-sm uppercase tracking-wider flex items-center justify-center gap-2";
+                btn.innerHTML = `<i class="fa-solid fa-award"></i> ${puzzle.btnLabel}`;
+                btn.onclick = () => {
+                    synth.playGong();
+                    openSertifikat();
+                };
+                workspace.appendChild(btn);
+            }
+        }
+
+        // Penanganan Sukses Tantangan Halaman
+        function handlePuzzleSuccess() {
+            synth.playSuccess();
+            quizProgress[currentPageIdx] = true;
+            saveQuizProgress();
+            showToast("Hebat! Tantangan berhasil dipecahkan.", "success");
+            renderComicPage(); // Segera render ulang untuk mengganti kartu puzzle jadi 'Solved'
+        }
+
+        // --- STREAMING_CHUNK: Menangani alur navigasi dan verifikasi kelulusan... ---
+        // Sertifikat Modal Controller
+        function openSertifikat() {
+            document.getElementById('cert-user-name').innerText = currentUsername;
+            document.getElementById('sertifikat-modal').classList.remove('hidden');
+        }
+
+        function closeSertifikat() {
+            document.getElementById('sertifikat-modal').classList.add('hidden');
+        }
+
+        // Kunci Navigasi Jika Di Awal atau Akhir & Cek Kuis Aktif
+        function checkNavigationLock() {
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+
+            // Halaman pertama
+            if (currentPageIdx === 0) {
+                btnPrev.disabled = true;
+                btnPrev.classList.add('opacity-40', 'cursor-not-allowed');
             } else {
-                drawer.classList.add("translate-x-full");
-                synth.playBeep(200, 'triangle', 0.1, 0.1);
+                btnPrev.disabled = false;
+                btnPrev.classList.remove('opacity-40', 'cursor-not-allowed');
+            }
+
+            // Kunci Halaman Selanjutnya berdasarkan kelulusan kuis
+            const isSolved = quizProgress[currentPageIdx] === true;
+            
+            // Guru/Admin bebas melewatinya tanpa harus menjawab kuis
+            if (isSolved || currentRole === 'admin') {
+                btnNext.disabled = false;
+                btnNext.classList.remove('opacity-40', 'cursor-not-allowed');
+            } else {
+                btnNext.disabled = true;
+                btnNext.classList.add('opacity-40', 'cursor-not-allowed');
+            }
+
+            // Halaman terakhir
+            if (currentPageIdx === COMIC_STORY.length - 1) {
+                btnNext.innerHTML = `Selesai <i class="fa-solid fa-trophy text-amber-900 ml-1"></i>`;
+            } else {
+                btnNext.innerHTML = `Selanjutnya <i class="fa-solid fa-arrow-right"></i>`;
+            }
+        }
+
+        // Navigasi Pindah Halaman
+        window.prevPage = function() {
+            if (currentPageIdx > 0) {
+                currentPageIdx--;
+                synth.playPageFlip();
+                currentClickCounter = 0; // reset lokal klik
+                renderComicPage();
             }
         };
+
+        window.nextPage = function() {
+            // Validasi Kunci
+            const isSolved = quizProgress[currentPageIdx] === true;
+            if (!isSolved && currentRole !== 'admin') {
+                synth.playError();
+                showToast("Selesaikan Tantangan Adat di samping kanan terlebih dahulu!", "error");
+                return;
+            }
+
+            if (currentPageIdx < COMIC_STORY.length - 1) {
+                currentPageIdx++;
+                synth.playPageFlip();
+                currentClickCounter = 0; // reset lokal klik
+                renderComicPage();
+            } else {
+                // Halaman Terakhir Selesai
+                synth.playSuccess();
+                openSertifikat();
+            }
+        };
+
+        window.jumpToPage = function(idx) {
+            // Melompati halaman diizinkan jika halaman tujuan atau halaman saat ini sudah selesai
+            if (idx >= 0 && idx < COMIC_STORY.length) {
+                if (idx > currentPageIdx && quizProgress[currentPageIdx] !== true && currentRole !== 'admin') {
+                    synth.playError();
+                    showToast("Selesaikan kuis aktif terlebih dahulu!", "error");
+                    return;
+                }
+                currentPageIdx = idx;
+                synth.playPageFlip();
+                currentClickCounter = 0;
+                renderComicPage();
+            }
+        };
+
+        // Pintasan Navigasi Keyboard Arrow (Kiri / Kanan)
+        function setupKeyboardNavigation() {
+            document.addEventListener('keydown', (e) => {
+                // Pastikan tidak mengetik di form input saat navigasi keyboard berjalan
+                const focusedTag = document.activeElement.tagName.toLowerCase();
+                if (focusedTag === 'input' || focusedTag === 'textarea') return;
+
+                if (e.key === 'ArrowRight') {
+                    nextPage();
+                } else if (e.key === 'ArrowLeft') {
+                    prevPage();
+                }
+            });
+        }
+
+
+        // --- STREAMING_CHUNK: Mengembangkan fungsionalitas pengeditan Admin... ---
+        // --- FITUR ADMIN PANEL ---
+
+        // Inisialisasi Daftar Halaman di Panel Admin
+        function initAdminPanel() {
+            const listContainer = document.getElementById('admin-page-list');
+            listContainer.innerHTML = "";
+
+            COMIC_STORY.forEach((story, idx) => {
+                const btn = document.createElement('button');
+                btn.id = `admin-page-btn-${idx}`;
+                btn.className = `w-full text-left p-3 rounded-xl border-2 border-[#3b2314] text-xs font-bold transition-all flex items-center justify-between ${
+                    idx === adminSelectedPageIdx ? 'bg-amber-400 text-slate-900' : 'bg-white hover:bg-stone-50 text-slate-700'
+                }`;
+                btn.onclick = () => selectPageToEdit(idx);
+                
+                btn.innerHTML = `
+                    <span>Hal ${story.page} - ${story.title}</span>
+                    <i class="fa-solid fa-angle-right"></i>
+                `;
+                listContainer.appendChild(btn);
+            });
+
+            // Sinkronkan editor ke halaman terpilih awal
+            selectPageToEdit(adminSelectedPageIdx);
+        }
+
+        // Memilih Halaman Untuk Diedit dari Daftar
+        function selectPageToEdit(idx) {
+            synth.playClick();
+            
+            // Perbarui warna status tombol daftar
+            document.getElementById(`admin-page-btn-${adminSelectedPageIdx}`).className = "w-full text-left p-3 rounded-xl border-2 border-[#3b2314] text-xs font-bold transition-all flex items-center justify-between bg-white hover:bg-stone-50 text-slate-700";
+            document.getElementById(`admin-page-btn-${idx}`).className = "w-full text-left p-3 rounded-xl border-2 border-[#3b2314] text-xs font-bold transition-all flex items-center justify-between bg-amber-400 text-slate-900";
+            
+            adminSelectedPageIdx = idx;
+
+            const story = COMIC_STORY[idx];
+            const state = illustrationsState[idx];
+
+            document.getElementById('admin-edit-title').innerText = `Sedang Mengedit: Halaman ${story.page}`;
+            document.getElementById('admin-desc-input').value = state.deskripsi;
+            document.getElementById('admin-emoji-input').value = state.ikon;
+            document.getElementById('admin-file-input').value = ""; // Kosongkan file uploader
+
+            // Perbarui Pratinjau
+            updateAdminPreview();
+        }
+
+        // Pemrosesan File Gambar dengan FileReader & Resizer (Batas < 2MB untuk kenyamanan localStorage)
+        const fileInput = document.getElementById('admin-file-input');
+        fileInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.match('image.*')) {
+                showToast("Berkas harus berupa gambar (JPG/PNG)!", "error");
+                fileInput.value = "";
+                return;
+            }
+
+            if (file.size > 2 * 1024 * 1024) {
+                showToast("Gambar terlalu besar! Batas ukuran maksimal adalah 2MB.", "error");
+                fileInput.value = "";
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function(evt) {
+                // Kompresi Gambar Menggunakan Canvas Sebelum Dimasukkan Ke State
+                const tempImg = new Image();
+                tempImg.onload = function() {
+                    const canvas = document.createElement('canvas');
+                    const MAX_WIDTH = 500; // Batasan lebar ideal untuk optimalisasi komik & penyimpanan
+                    let width = tempImg.width;
+                    let height = tempImg.height;
+
+                    if (width > MAX_WIDTH) {
+                        height = Math.round((height * MAX_WIDTH) / width);
+                        width = MAX_WIDTH;
+                    }
+
+                    canvas.width = width;
+                    canvas.height = height;
+                    const ctx = canvas.getContext('2d');
+                    ctx.drawImage(tempImg, 0, 0, width, height);
+
+                    // Konversi ke format JPEG dengan kualitas kompresi optimal
+                    const compressedBase64 = canvas.toDataURL('image/jpeg', 0.7);
+                    
+                    // Tempelkan gambar ke state lokal editor sementara
+                    illustrationsState[adminSelectedPageIdx].gambar = compressedBase64;
+                    updateAdminPreview();
+                    showToast("Gambar berhasil diunggah & dikompresi ke pratinjau!", "success");
+                };
+                tempImg.src = evt.target.result;
+            };
+            reader.readAsDataURL(file);
+        });
+
+        // Menghapus Gambar Unggahan (Kembali ke mode Emoji)
+        function deleteIllustrationImage() {
+            synth.playClick();
+            illustrationsState[adminSelectedPageIdx].gambar = null;
+            document.getElementById('admin-file-input').value = "";
+            updateAdminPreview();
+            showToast("Gambar unggahan dihapus. Halaman ini menggunakan Ikon Emoji.", "success");
+        }
+
+        // Perbarui Tampilan Pratinjau Panel Admin
+        function updateAdminPreview() {
+            const state = illustrationsState[adminSelectedPageIdx];
+            const previewArea = document.getElementById('admin-preview-area');
+            previewArea.innerHTML = "";
+
+            if (state.gambar) {
+                const img = document.createElement('img');
+                img.src = state.gambar;
+                img.className = "max-h-[100px] object-contain rounded-lg border border-stone-300 shadow bg-white p-1";
+                previewArea.appendChild(img);
+            } else {
+                const emoji = document.createElement('span');
+                emoji.className = "text-5xl block animate-pulse";
+                emoji.innerText = state.ikon || "🌸";
+                previewArea.appendChild(emoji);
+            }
+
+            const label = document.createElement('p');
+            label.className = "text-[10px] text-stone-600 font-bold mt-2 text-center truncate max-w-full";
+            label.innerText = `Deskripsi: "${state.deskripsi || '(Kosong)'}"`;
+            previewArea.appendChild(label);
+        }
+
+        // Menyimpan Perubahan Halaman Tertentu yang Dipilih
+        function saveCurrentPageChanges() {
+            const descValue = document.getElementById('admin-desc-input').value.trim();
+            const emojiValue = document.getElementById('admin-emoji-input').value.trim();
+
+            if (!descValue) {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Deskripsi ilustrasi tidak boleh kosong!", "error");
+                return;
+            }
+
+            // Simpan perubahan form ke state global
+            illustrationsState[adminSelectedPageIdx].deskripsi = descValue;
+            illustrationsState[adminSelectedPageIdx].ikon = emojiValue || "🌸";
+
+            // Tulis permanen ke localStorage
+            saveToLocalStorage();
+            synth.playSuccess();
+            showToast(`Perubahan Halaman ${adminSelectedPageIdx + 1} berhasil disimpan permanen!`, "success");
+
+            // Re-render komik di atas secara langsung jika sedang berada di halaman yang sama
+            if (currentPageIdx === adminSelectedPageIdx) {
+                renderComicPage();
+            }
+        }
+
+        // Mengatur Ulang Seluruh Ilustrasi ke Standar Bawaan Cerita (Global Reset)
+        function resetAllToDefault() {
+            if (confirm("Apakah Guru yakin ingin mereset seluruh kustomisasi gambar kembali ke bawaan sistem?")) {
+                loadDefaultIllustrations();
+                synth.playPageFlip();
+                
+                // Sinkronkan ulang tampilan editor dan halaman aktif komik
+                selectPageToEdit(adminSelectedPageIdx);
+                renderComicPage();
+                showToast("Seluruh halaman berhasil di-reset ke pengaturan default komik!", "success");
+            }
+        }
     </script>
 </body>
 </html>
