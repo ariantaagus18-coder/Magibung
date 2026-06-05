@@ -1,0 +1,1222 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Serunya Belajar Megibung Bersama Made & Teman-Teman</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome untuk Ikon Premium -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;800;900&family=Quicksand:wght@400;600;700&family=Patrick+Hand&display=swap" rel="stylesheet">
+    
+    <style>
+        body {
+            font-family: 'Quicksand', sans-serif;
+            background-color: #faf6f0; /* Warna hangat krim pasir */
+            background-image: radial-gradient(#dfdcd6 1.2px, transparent 1.2px);
+            background-size: 24px 24px;
+        }
+        .comic-font {
+            font-family: 'Patrick Hand', cursive;
+        }
+        .title-font {
+            font-family: 'Cinzel', serif;
+        }
+        /* Efek Claymorphism Premium */
+        .clay-card {
+            background: rgba(255, 255, 255, 0.95);
+            border: 3px solid #3b2314;
+            border-radius: 2rem;
+            box-shadow: 6px 6px 0px #3b2314;
+        }
+        .clay-btn-amber {
+            background-color: #f59e0b;
+            color: #3b2314;
+            border: 3px solid #3b2314;
+            border-radius: 1rem;
+            box-shadow: 4px 4px 0px #3b2314;
+            transition: all 0.2s ease;
+        }
+        .clay-btn-amber:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #3b2314;
+        }
+        .clay-btn-amber:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #3b2314;
+        }
+        .clay-btn-emerald {
+            background-color: #10b981;
+            color: white;
+            border: 3px solid #3b2314;
+            border-radius: 1rem;
+            box-shadow: 4px 4px 0px #3b2314;
+            transition: all 0.2s ease;
+        }
+        .clay-btn-emerald:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #3b2314;
+        }
+        .clay-btn-emerald:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #3b2314;
+        }
+        .clay-btn-rose {
+            background-color: #f43f5e;
+            color: white;
+            border: 3px solid #3b2314;
+            border-radius: 1rem;
+            box-shadow: 4px 4px 0px #3b2314;
+            transition: all 0.2s ease;
+        }
+        .clay-btn-rose:hover {
+            transform: translate(-2px, -2px);
+            box-shadow: 6px 6px 0px #3b2314;
+        }
+        .clay-btn-rose:active {
+            transform: translate(2px, 2px);
+            box-shadow: 2px 2px 0px #3b2314;
+        }
+        /* Balon Kata Komik */
+        .speech-bubble {
+            position: relative;
+            background: #ffffff;
+            border: 3px solid #3b2314;
+            border-radius: 1.5rem;
+            box-shadow: 4px 4px 0px rgba(59, 35, 20, 0.15);
+        }
+        .speech-bubble::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 0;
+            border-style: solid;
+        }
+        .bubble-left::after {
+            left: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 10px 16px 10px 0;
+            border-color: transparent #ffffff transparent transparent;
+        }
+        .bubble-left::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 12px 20px 12px 0;
+            border-color: transparent #3b2314 transparent transparent;
+            z-index: -1;
+        }
+        .bubble-right::after {
+            right: -16px;
+            top: 50%;
+            transform: translateY(-50%);
+            border-width: 10px 0 10px 16px;
+            border-color: transparent transparent transparent #ffffff;
+        }
+        .bubble-right::before {
+            content: '';
+            position: absolute;
+            right: -20px;
+            top: 50%;
+            transform: translateY(-50%);
+            width: 0;
+            height: 0;
+            border-style: solid;
+            border-width: 12px 0 12px 20px;
+            border-color: transparent transparent transparent #3b2314;
+            z-index: -1;
+        }
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 10px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1ebd9;
+            border-left: 2px solid #3b2314;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #d97706;
+            border: 2px solid #3b2314;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col justify-between selection:bg-amber-400 selection:text-amber-950 overflow-x-hidden">
+
+    <!-- Notifikasi Toast Kustom -->
+    <div id="toast-container" class="fixed top-5 right-5 z-50 flex flex-col gap-2 pointer-events-none"></div>
+
+    <!-- AUDIO SYNTHESIS CONTEXT (Suara Gamelan Virtual) -->
+    <script>
+        class AudioSynth {
+            constructor() {
+                this.ctx = null;
+            }
+            init() {
+                if (!this.ctx) {
+                    this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+                }
+            }
+            playBeep(freq, type, duration, vol) {
+                this.init();
+                if (this.ctx.state === 'suspended') {
+                    this.ctx.resume();
+                }
+                const osc = this.ctx.createOscillator();
+                const gain = this.ctx.createGain();
+                osc.type = type || 'sine';
+                osc.frequency.setValueAtTime(freq || 440, this.ctx.currentTime);
+                gain.gain.setValueAtTime(vol || 0.1, this.ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, this.ctx.currentTime + duration);
+                osc.connect(gain);
+                gain.connect(this.ctx.destination);
+                osc.start();
+                osc.stop(this.ctx.currentTime + duration);
+            }
+            playPageFlip() {
+                this.playBeep(250, 'triangle', 0.2, 0.15);
+                setTimeout(() => this.playBeep(400, 'sine', 0.15, 0.1), 60);
+            }
+            playClick() {
+                this.playBeep(500, 'sine', 0.08, 0.12);
+            }
+            playSuccess() {
+                const notes = [261.63, 329.63, 392.00, 523.25]; // C4, E4, G4, C5
+                notes.forEach((freq, idx) => {
+                    setTimeout(() => {
+                        this.playBeep(freq, 'triangle', 0.3, 0.15);
+                    }, idx * 100);
+                });
+            }
+            playError() {
+                this.playBeep(150, 'sawtooth', 0.4, 0.2);
+            }
+            playGong() {
+                this.playBeep(110, 'sine', 1.8, 0.4); 
+                this.playBeep(220, 'triangle', 1.4, 0.2); 
+            }
+        }
+        const synth = new AudioSynth();
+
+        function showToast(message, type = 'success') {
+            const container = document.getElementById('toast-container');
+            const toast = document.createElement('div');
+            toast.className = `p-4 rounded-xl shadow-lg text-sm font-bold transition-all duration-300 transform translate-y-2 opacity-0 pointer-events-auto flex items-center gap-2 border-2 border-[#3b2314] ${
+                type === 'success' ? 'bg-emerald-500 text-white' : 'bg-rose-500 text-white'
+            }`;
+            toast.innerHTML = `<span>${type === 'success' ? '✨' : '⚠️'}</span> <span>${message}</span>`;
+            container.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.classList.remove('translate-y-2', 'opacity-0');
+            }, 50);
+
+            setTimeout(() => {
+                toast.classList.add('translate-y-2', 'opacity-0');
+                setTimeout(() => { toast.remove(); }, 300);
+            }, 3000);
+        }
+    </script>
+
+    <!-- LANDING & LOGIN PAGE -->
+    <div id="landing-page" class="fixed inset-0 z-50 bg-[#164e63] flex items-center justify-center p-4 overflow-y-auto">
+        <div class="max-w-xl w-full bg-[#faf6f0] border-4 border-[#3b2314] rounded-3xl p-8 shadow-[8px_8px_0px_#3b2314] text-[#3b2314] relative overflow-hidden my-auto">
+            <div class="absolute -top-12 -right-12 text-9xl opacity-10">🌴</div>
+            <div class="absolute -bottom-12 -left-12 text-9xl opacity-10">🍲</div>
+            
+            <div class="text-center mb-8">
+                <span class="text-6xl block mb-2 animate-bounce">🌸</span>
+                <h1 class="title-font font-black text-3xl text-amber-800 tracking-wider">MEGIBUNG</h1>
+                <p class="text-xs text-cyan-900 font-bold uppercase tracking-widest mt-1">E-Komik Edukatif Nilai Kebersamaan Bali</p>
+            </div>
+
+            <!-- Panel Opsi Masuk -->
+            <div id="login-selection" class="flex flex-col gap-4">
+                <button onclick="switchLoginMode('siswa')" class="w-full py-4 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-black rounded-2xl border-4 border-[#3b2314] shadow-[4px_4px_0px_#3b2314] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 text-lg">
+                    <i class="fa-solid fa-graduation-cap"></i> Masuk Sebagai Siswa
+                </button>
+                <button onclick="switchLoginMode('admin')" class="w-full py-4 bg-emerald-500 hover:bg-emerald-400 text-white font-black rounded-2xl border-4 border-[#3b2314] shadow-[4px_4px_0px_#3b2314] active:translate-y-1 active:shadow-none transition-all flex items-center justify-center gap-3 text-lg">
+                    <i class="fa-solid fa-chalkboard-user"></i> Masuk Sebagai Guru / Admin
+                </button>
+            </div>
+
+            <!-- Form Login Siswa -->
+            <div id="form-siswa" class="hidden flex flex-col gap-4">
+                <h3 class="font-bold text-lg text-amber-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-user-pen"></i> Masukkan Identitas Siswa
+                </h3>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Lengkap Siswa</label>
+                    <input type="text" id="siswa-name-input" placeholder="Ketik nama lengkap siswa..." class="w-full px-4 py-3 rounded-xl border-3 border-[#3b2314] text-base focus:outline-none focus:ring-2 focus:ring-amber-400 transition-all font-semibold">
+                </div>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="backToSelection()" class="flex-1 py-3 bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold rounded-xl border-3 border-[#3b2314]">
+                        Kembali
+                    </button>
+                    <button onclick="submitSiswaLogin()" class="flex-1 py-3 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-bold rounded-xl border-3 border-[#3b2314] shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 transition-all">
+                        Mulai Belajar 🚀
+                    </button>
+                </div>
+            </div>
+
+            <!-- Form Login Admin -->
+            <div id="form-admin" class="hidden flex flex-col gap-4">
+                <h3 class="font-bold text-lg text-emerald-900 mb-2 flex items-center gap-2">
+                    <i class="fa-solid fa-lock"></i> Verifikasi Keamanan Guru / Admin
+                </h3>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Nama Panggilan Guru</label>
+                    <input type="text" id="admin-name-input" placeholder="Ketik nama Guru..." class="w-full px-4 py-3 rounded-xl border-3 border-[#3b2314] text-base focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-semibold">
+                </div>
+                <div>
+                    <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-1">Password Akses</label>
+                    <input type="password" id="admin-pass-input" placeholder="Ketik sandi keamanan..." class="w-full px-4 py-3 rounded-xl border-3 border-[#3b2314] text-base focus:outline-none focus:ring-2 focus:ring-emerald-400 transition-all font-semibold">
+                </div>
+                <p class="text-xs text-emerald-700 italic font-semibold">Gunakan kata sandi default: <strong class="underline">admin123</strong></p>
+                <div class="flex gap-2 mt-2">
+                    <button onclick="backToSelection()" class="flex-1 py-3 bg-slate-300 hover:bg-slate-400 text-slate-800 font-bold rounded-xl border-3 border-[#3b2314]">
+                        Kembali
+                    </button>
+                    <button onclick="submitAdminLogin()" class="flex-1 py-3 bg-emerald-500 hover:bg-emerald-400 text-white font-bold rounded-xl border-3 border-[#3b2314] shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 transition-all">
+                        Masuk Admin
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MAIN APP WRAPPER -->
+    <div id="app-content" class="flex-grow flex flex-col">
+        <!-- HEADER -->
+        <header class="bg-[#1e3a34] border-b-4 border-[#3b2314] text-white px-4 py-3.5 sticky top-0 z-40 shadow-md">
+            <div class="max-w-7xl mx-auto flex flex-col md:flex-row justify-between items-center gap-3">
+                <div class="flex items-center gap-3">
+                    <span class="text-3xl">🌸</span>
+                    <div>
+                        <h1 class="title-font text-lg md:text-xl font-bold tracking-wider text-amber-400">MEGIBUNG KARANGASEM</h1>
+                        <p class="text-xs text-slate-300 font-semibold uppercase tracking-widest">Komik Edukasi & Interaksi Warisan Luhur</p>
+                    </div>
+                </div>
+                
+                <div class="flex flex-wrap items-center gap-3">
+                    <span id="sync-badge" class="bg-emerald-900 border border-emerald-600 text-emerald-300 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold">
+                        🟢 Realtime Sync: Aktif
+                    </span>
+                    <button onclick="toggleReferenceDrawer()" class="bg-amber-500 hover:bg-amber-400 text-slate-900 font-bold px-3 py-1.5 rounded-lg text-xs border-2 border-[#3b2314] flex items-center gap-1 transition-all">
+                        <i class="fa-solid fa-images"></i> Panduan Adat
+                    </button>
+                    <span id="user-badge" class="bg-[#faf6f0] text-[#3b2314] px-4 py-1.5 rounded-full text-xs font-bold border-2 border-[#3b2314] shadow-sm flex items-center gap-2">
+                        <i class="fa-solid fa-user"></i> <span id="current-username-text">Tamu</span>
+                    </span>
+                    <button onclick="handleLogout()" class="bg-rose-500 hover:bg-rose-400 text-white font-bold px-3 py-1.5 rounded-lg text-xs border-2 border-[#3b2314] shadow-sm flex items-center gap-1 transition-all">
+                        <i class="fa-solid fa-door-open"></i> Keluar
+                    </button>
+                </div>
+            </div>
+        </header>
+
+        <!-- CONTAINER UTAMA -->
+        <main class="max-w-7xl mx-auto px-4 py-8 flex-grow grid grid-cols-1 lg:grid-cols-12 gap-8 w-full items-start">
+            
+            <!-- KOLOM KIRI: JENDELA UTAMA KOMIK (Lg: col-span-8) -->
+            <div class="lg:col-span-8 flex flex-col gap-6">
+                <!-- PANEL BADGE TOKOH YANG TERSEDIA -->
+                <div class="bg-amber-100/50 p-4 rounded-2xl border-3 border-[#3b2314] flex flex-wrap gap-2 items-center shadow-inner">
+                    <span class="text-xs font-extrabold uppercase tracking-wider text-[#3b2314] mr-2">Tokoh Halaman Ini:</span>
+                    <div id="character-badges" class="flex flex-wrap gap-2"></div>
+                </div>
+
+                <!-- KOMIK JENDELA BINGKAI -->
+                <div class="clay-card p-6 md:p-8 flex flex-col min-h-[580px] justify-between relative overflow-hidden">
+                    
+                    <!-- Top Ribbon -->
+                    <div class="w-full flex justify-between items-center mb-4 border-b-2 border-amber-900/10 pb-3">
+                        <span class="text-amber-800 text-xl font-bold">🌸</span>
+                        <h2 id="comic-pane-title" class="title-font text-sm md:text-base font-black tracking-widest text-[#3b2314] uppercase">Memuat Cerita...</h2>
+                        <span class="text-amber-800 text-xl font-bold">🌸</span>
+                    </div>
+
+                    <!-- Kotak Narasi Komik -->
+                    <div class="bg-amber-100 border-3 border-[#3b2314] rounded-2xl p-4 mb-6 shadow-md text-[#3b2314] font-semibold relative leading-relaxed">
+                        <span class="absolute -top-3.5 left-4 bg-[#3b2314] text-white text-[10px] font-bold px-2.5 py-0.5 rounded uppercase tracking-wider">Narasi Cerita</span>
+                        <p id="narration-text" class="text-base text-stone-850">Mengambil narasi halaman...</p>
+                    </div>
+
+                    <!-- Area Ilustrasi Interaktif -->
+                    <div class="w-full bg-[#f4ebd9] rounded-2xl border-3 border-[#3b2314] mb-6 overflow-hidden relative flex flex-col items-center justify-center min-h-[250px] md:min-h-[300px] p-4 shadow-inner">
+                        <div id="illustration-media" class="flex items-center justify-center mb-2">
+                            <!-- Diisi secara dinamis dengan gambar base64 atau emoji -->
+                        </div>
+                        <div id="illustration-caption" class="text-xs text-[#3b2314] font-bold uppercase tracking-wide text-center bg-white/80 px-3 py-1.5 rounded-lg border-2 border-[#3b2314] mt-2 max-w-md">
+                            Memuat ilustrasi...
+                        </div>
+                    </div>
+
+                    <!-- Daftar Dialog Balon Kata -->
+                    <div id="dialogues-container" class="flex flex-col gap-4 min-h-[140px] justify-end"></div>
+                </div>
+
+                <!-- NAVIGASI TOMBOL HALAMAN -->
+                <div class="flex flex-col sm:flex-row justify-between items-center gap-4 bg-[#1e3a34] p-4 rounded-2xl border-3 border-[#3b2314] shadow-md">
+                    <div class="flex items-center gap-2">
+                        <button onclick="jumpToPage(0)" class="px-3 py-2 text-xs bg-slate-800 text-amber-400 border-2 border-[#3b2314] rounded-lg font-bold hover:bg-slate-700 transition-all">
+                            <i class="fa-solid fa-backward-step"></i> Ke Awal
+                        </button>
+                        <span id="page-counter" class="font-mono text-sm font-extrabold text-amber-400 bg-black/40 px-4 py-2 rounded-full border border-emerald-800">
+                            Halaman 1 / 10
+                        </span>
+                    </div>
+
+                    <div class="flex items-center gap-3">
+                        <button id="btn-prev" onclick="prevPage()" class="px-5 py-2.5 text-sm bg-amber-100 hover:bg-amber-200 text-[#3b2314] border-3 border-[#3b2314] rounded-xl font-bold shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 active:shadow-none transition-all">
+                            <i class="fa-solid fa-arrow-left"></i> Sebelum
+                        </button>
+                        <button id="btn-next" onclick="nextPage()" class="px-6 py-2.5 text-sm bg-amber-500 hover:bg-amber-400 text-[#3b2314] border-3 border-[#3b2314] rounded-xl font-extrabold shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 active:shadow-none transition-all">
+                            Selanjutnya <i class="fa-solid fa-arrow-right"></i>
+                        </button>
+                    </div>
+
+                    <div class="hidden md:flex items-center gap-1 text-xs text-emerald-200 font-bold">
+                        <span>Gunakan tombol panah keyboard</span>
+                        <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-white font-mono text-[10px]">◀</kbd>
+                        <kbd class="px-1.5 py-0.5 rounded bg-slate-800 text-white font-mono text-[10px]">▶</kbd>
+                    </div>
+                </div>
+            </div>
+
+            <!-- KOLOM KANAN: GAMIFIKASI INTERAKTIF, GLOSARIUM, & CHATBOT (Lg: col-span-4) -->
+            <div class="lg:col-span-4 flex flex-col gap-6">
+                
+                <!-- KARTU GAMIFIKASI: TANTANGAN HALAMAN INI -->
+                <div class="clay-card p-6 border-3 border-[#3b2314] bg-amber-50 relative overflow-hidden">
+                    <div class="absolute -top-3 -right-3 text-7xl opacity-10">🎮</div>
+                    <h3 class="title-font text-lg font-black text-amber-800 flex items-center gap-2 border-b-2 border-amber-900/10 pb-2">
+                        <i class="fa-solid fa-gamepad"></i> Tantangan Adat
+                    </h3>
+                    
+                    <!-- Workspace Dynamic Puzzle Container -->
+                    <div id="gamified-workspace" class="mt-4">
+                        <!-- Konten tantangan dimuat di sini secara dinamis -->
+                    </div>
+                </div>
+
+                <!-- ✨ TANYA KAKEK WAYAN AI CHATBOT -->
+                <div class="clay-card p-5 border-3 border-[#3b2314] bg-emerald-900 text-white relative overflow-hidden">
+                    <div class="absolute -top-3 -right-3 text-7xl opacity-10">👴🏽</div>
+                    <h3 class="title-font text-sm font-bold text-amber-400 flex items-center gap-2 border-b border-emerald-800 pb-2 uppercase tracking-widest">
+                        <i class="fa-solid fa-wand-magic-sparkles animate-pulse"></i> Tanya Kakek Wayan AI
+                    </h3>
+                    <p class="text-[10px] text-emerald-200 mt-1.5 leading-relaxed">
+                        Ada yang belum dipahami tentang adat Megibung atau budaya Karangasem? Tanyakan apa saja langsung pada Kakek Wayan!
+                    </p>
+                    <div class="mt-3 flex flex-col gap-2">
+                        <div id="ai-chat-history" class="h-32 overflow-y-auto bg-slate-950/60 p-2.5 rounded-xl border border-emerald-800 text-xs flex flex-col gap-2">
+                            <div class="text-amber-300 font-medium leading-relaxed">👵🏽 <strong>Kakek Wayan:</strong> Swastiastu Cucu Kakek yang cerdas! Ada yang ingin ditanyakan tentang kebersamaan Megibung di Karangasem?</div>
+                        </div>
+                        <div class="flex gap-1.5">
+                            <input type="text" id="ai-chat-input" placeholder="Tanya kakek di sini..." class="flex-grow p-2.5 bg-slate-950 text-white rounded-xl border border-emerald-800 text-xs focus:outline-none focus:border-amber-400 font-semibold">
+                            <button id="btn-send-chat" onclick="handleSendAIChat()" class="px-3 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-bold rounded-xl text-xs flex items-center justify-center transition-all">
+                                Kirim
+                            </button>
+                        </div>
+                        <div id="ai-chat-loading" class="hidden text-[10px] text-amber-400 animate-pulse font-mono flex items-center gap-1.5 mt-1">
+                            <i class="fa-solid fa-spinner fa-spin"></i> Kakek sedang mengingat pesan leluhur...
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Panduan Budaya Megibung -->
+                <div class="clay-card p-6 border-3 border-[#3b2314]">
+                    <h3 class="title-font text-lg font-black text-amber-800 flex items-center gap-2 border-b-2 border-amber-900/10 pb-2">
+                        <i class="fa-solid fa-circle-info"></i> Nilai Karuhun Megibung
+                    </h3>
+                    <p class="text-sm text-stone-700 leading-relaxed mt-3">
+                        Tradisi khas Karangasem, Bali yang merujuk pada tata cara bersantap nasi dan lauk dalam satu piring anyaman bambu raksasa (<strong class="text-amber-800">Gibungan</strong>) secara melingkar.
+                    </p>
+                    
+                    <div class="mt-4 flex flex-col gap-3">
+                        <div class="flex gap-2 items-start bg-amber-100/40 p-2.5 rounded-xl border border-amber-200">
+                            <span class="text-lg">🤝</span>
+                            <div class="text-xs text-stone-700">
+                                <strong>Gotong Royong & Persatuan:</strong> Persaudaraan erat terjalin sejak awal proses memasak hingga merapikan banjar secara bersama-sama.
+                            </div>
+                        </div>
+                        <div class="flex gap-2 items-start bg-amber-100/40 p-2.5 rounded-xl border border-amber-200">
+                            <span class="text-lg">⚖️</span>
+                            <div class="text-xs text-stone-700">
+                                <strong>Keadilan Sosial:</strong> Semua orang duduk setara tanpa memandang latar belakang sosial dan mendapat porsi hidangan yang sama.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Kamus Bahasa Karangasem -->
+                <div class="clay-card p-6 border-3 border-[#3b2314]">
+                    <h3 class="title-font text-lg font-black text-emerald-800 flex items-center gap-2 border-b-2 border-amber-900/10 pb-2">
+                        <i class="fa-solid fa-book-bookmark"></i> Kamus Budaya Halaman Ini
+                    </h3>
+                    <div id="vocabulary-container" class="mt-4 space-y-3">
+                        <!-- Diisi secara dinamis tergantung halaman aktif -->
+                    </div>
+                </div>
+            </div>
+        </main>
+
+        <!-- PANEL KONTROL GURU & ADMIN (Hanya terlihat jika logged-in role == 'admin') -->
+        <div id="admin-panel-section" class="hidden max-w-7xl mx-auto w-full px-4 pb-12">
+            <div class="clay-card p-6 md:p-8 border-3 border-emerald-950 bg-[#0f2922] text-slate-100">
+                
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b-3 border-[#3b2314] pb-4 mb-6 gap-3">
+                    <div>
+                        <h2 class="title-font font-black text-xl text-amber-400 tracking-wide flex items-center gap-2">
+                            <i class="fa-solid fa-sliders"></i> PANEL KONTROL GURU & ADMIN (REAL-TIME DASHBOARD)
+                        </h2>
+                        <p class="text-xs text-emerald-300 font-semibold uppercase tracking-wider mt-1">Sesuaikan Ilustrasi, Pantau Hasil Belajar Siswa, & Analisis Laporan Cerdas AI</p>
+                    </div>
+                    <button onclick="resetAllToDefault()" class="clay-btn-rose px-4 py-2 text-xs font-bold flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> Reset Semua Ke Default
+                    </button>
+                </div>
+
+                <!-- Kontrol Utama Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
+                    
+                    <!-- Sub-panel Kiri: Pilihan Halaman & Form Kustomisasi Visual -->
+                    <div class="lg:col-span-6 bg-[#163c32] p-5 rounded-2xl border-2 border-emerald-800/80 flex flex-col gap-4">
+                        <h4 class="font-bold text-xs uppercase text-amber-400 tracking-wider flex items-center gap-1.5">
+                            <i class="fa-solid fa-image"></i> Kustomisasi Visual Ilustrasi Halaman
+                        </h4>
+                        
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase text-slate-300 mb-1">Pilih Halaman Untuk Diedit:</label>
+                            <select id="admin-select-page" onchange="selectPageToEdit(this.value)" class="w-full text-xs bg-slate-900 text-white border-2 border-emerald-800 px-3 py-2.5 rounded-xl focus:outline-none focus:border-amber-400 font-semibold">
+                                <option value="0">Halaman 1 - Hari yang Istimewa</option>
+                                <option value="1">Halaman 2 - Rasa Penasaran I Luh</option>
+                                <option value="2">Halaman 3 - Bertemu Kakek Wayan</option>
+                                <option value="3">Halaman 4 - Sejarah Megibung</option>
+                                <option value="4">Halaman 5 - Saat Megibung Dimulai</option>
+                                <option value="5">Halaman 6 - Belajar Nilai Kebersamaan</option>
+                                <option value="6">Halaman 7 - Saling Membantu</option>
+                                <option value="7">Halaman 8 - Pelajaran Berharga</option>
+                                <option value="8">Halaman 9 - Pesan untuk Generasi Muda</option>
+                                <option value="9">Halaman 10 - Penutup Keberhasilan</option>
+                            </select>
+                        </div>
+
+                        <!-- 1. Edit Deskripsi Ilustrasi -->
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase text-slate-300 mb-1">Deskripsi Ilustrasi (Caption Gambar)</label>
+                            <input type="text" id="admin-desc-input" placeholder="Ketik deskripsi ilustrasi..." class="w-full px-3 py-2 bg-slate-900 text-white border-2 border-emerald-800 rounded-xl text-sm focus:outline-none focus:border-amber-400 font-semibold">
+                        </div>
+
+                        <!-- 2. Edit Ikon Emoji -->
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase text-slate-300 mb-1">Ikon Emoji (Fallback)</label>
+                            <input type="text" id="admin-emoji-input" placeholder="Contoh: 🌸👨‍🍳🍢" class="w-full px-3 py-2 bg-slate-900 text-white border-2 border-emerald-800 rounded-xl text-sm focus:outline-none focus:border-amber-400 font-semibold">
+                        </div>
+
+                        <!-- 3. Unggah Berkas Gambar -->
+                        <div>
+                            <label class="block text-xs font-extrabold uppercase text-slate-300 mb-1">Unggah Berkas Gambar Baru (PNG/JPG)</label>
+                            <div class="flex flex-col sm:flex-row gap-3 items-center mt-1">
+                                <input type="file" id="admin-file-input" accept=".png, .jpg, .jpeg" class="w-full text-xs text-stone-300 file:mr-3 file:py-2 file:px-4 file:rounded-xl file:border-2 file:border-amber-500 file:text-xs file:font-bold file:bg-[#1e3a34] file:text-amber-400 hover:file:bg-[#254b43] cursor-pointer">
+                                <button onclick="deleteIllustrationImage()" class="w-full sm:w-auto px-4 py-2.5 bg-rose-900/60 hover:bg-rose-800 text-white border-2 border-rose-700 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 shrink-0">
+                                    <i class="fa-solid fa-trash-can"></i> Hapus
+                                </button>
+                            </div>
+                        </div>
+
+                        <!-- Area Pratinjau Ilustrasi yang Diubah -->
+                        <div class="p-3 bg-slate-950 rounded-xl border border-emerald-800 flex flex-col items-center">
+                            <span class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-2">Pratinjau Hasil Edit</span>
+                            <div id="admin-preview-area" class="w-full h-36 bg-[#f4ebd9] rounded-lg border-2 border-dashed border-emerald-800 flex flex-col items-center justify-center p-2">
+                                <!-- Pratinjau dinamis -->
+                            </div>
+                        </div>
+
+                        <!-- Tombol Aksi Simpan -->
+                        <div class="flex gap-2 justify-end mt-2">
+                            <button onclick="saveCurrentPageChanges()" class="clay-btn-emerald px-6 py-3 font-extrabold text-sm flex items-center gap-2">
+                                <i class="fa-solid fa-cloud-arrow-up"></i> Simpan ke Awan & Sinkronkan
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- Sub-panel Kanan: Live Progress Hasil Siswa & AI Report Analyzer -->
+                    <div class="lg:col-span-6 bg-[#163c32] p-5 rounded-2xl border-2 border-emerald-800/80 flex flex-col gap-4">
+                        <h4 class="font-bold text-xs uppercase text-amber-400 tracking-wider flex items-center justify-between">
+                            <span><i class="fa-solid fa-users"></i> Daftar Nilai & Aktivitas Siswa (Real-Time)</span>
+                            <span class="bg-emerald-950 text-emerald-400 border border-emerald-800 text-[9px] px-2 py-0.5 rounded-full font-bold">Sinkronisasi Hidup</span>
+                        </h4>
+
+                        <!-- Tabel Hasil Belajar Siswa -->
+                        <div class="overflow-x-auto rounded-xl border border-emerald-800 bg-slate-950">
+                            <table class="w-full text-left border-collapse text-xs">
+                                <thead>
+                                    <tr class="bg-[#1e3a34] text-slate-300 font-bold border-b border-emerald-800">
+                                        <th class="p-3">Nama Siswa</th>
+                                        <th class="p-3">Halaman</th>
+                                        <th class="p-3 text-center">Tantangan Selesai</th>
+                                        <th class="p-3 text-center">Hasil Kuis</th>
+                                        <th class="p-3">Waktu Log</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="student-live-tbody" class="text-slate-300 divide-y divide-emerald-900/60">
+                                    <tr>
+                                        <td colspan="5" class="p-4 text-center text-slate-500">Menunggu pendaftaran siswa baru...</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+
+                        <!-- ✨ AI ASSESSMENT REPORT GENERATOR -->
+                        <div class="mt-2 bg-slate-950 p-4 rounded-xl border border-emerald-800 flex flex-col gap-3">
+                            <div class="flex items-center justify-between">
+                                <span class="text-xs font-bold text-amber-300 uppercase tracking-wide"><i class="fa-solid fa-microchip animate-pulse"></i> Analisis Karakter & Kompetensi AI</span>
+                                <button id="btn-ai-analyze-students" onclick="handleAIAnalyzeStudents()" class="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-black rounded-lg text-xs transition-all flex items-center gap-1.5 shadow">
+                                    ✨ Analisis Laporan Siswa
+                                </button>
+                            </div>
+                            <p class="text-[10px] text-slate-400 leading-normal">
+                                Generator AI akan menganalisis data riil perkembangan kognitif dan perilaku karakter siswa (gotong royong, kesetaraan) dari tabel di atas sesuai konsep Kurikulum Merdeka.
+                            </p>
+                            <div id="ai-evaluation-loading" class="hidden text-[10px] text-amber-400 animate-pulse font-mono flex items-center gap-1">
+                                <i class="fa-solid fa-spinner fa-spin"></i> Merumuskan model penilaian terintegrasi...
+                            </div>
+                            <div id="ai-evaluation-result" class="hidden p-3 rounded-lg bg-slate-900 border border-emerald-900 text-xs text-slate-300 whitespace-pre-line leading-relaxed max-h-48 overflow-y-auto font-mono">
+                                Hasil ulasan cerdas guru akan dimuat di sini...
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- POPUP MODAL SERTIFIKAT KELULUSAN -->
+        <div id="sertifikat-modal" class="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 hidden">
+            <div class="max-w-md w-full bg-[#faf6f0] border-8 border-amber-500 rounded-3xl p-6 text-center text-[#3b2314] shadow-2xl relative">
+                <button onclick="closeSertifikat()" class="absolute top-3 right-4 text-xl font-bold hover:text-rose-600 transition-all">✕</button>
+                <div class="text-6xl mb-3">🏆</div>
+                <h3 class="title-font font-black text-2xl text-amber-800">SELAMAT!</h3>
+                <p class="font-bold text-sm mt-1">Kamu Berhasil Menyelesaikan Pembelajaran Adat Megibung</p>
+                
+                <div class="bg-white border-2 border-[#3b2314] rounded-2xl p-4 my-4 shadow-inner text-center">
+                    <span class="text-[10px] text-amber-800 font-black uppercase tracking-widest">Sertifikat Digital</span>
+                    <h4 id="cert-user-name" class="font-bold text-lg text-emerald-900 border-b border-stone-100 pb-1">Nama Siswa</h4>
+                    <p class="text-xs text-slate-600 mt-2 italic">Telah memahami nilai gotong royong, keadilan sosial, dan tata krama tradisi luhur Karangasem Bali.</p>
+                </div>
+                
+                <button onclick="closeSertifikat()" class="w-full py-3 bg-amber-500 hover:bg-amber-400 text-[#3b2314] font-black rounded-xl border-3 border-[#3b2314] shadow-[2px_2px_0px_#3b2314] active:translate-y-0.5 active:shadow-none transition-all">
+                    Selesai & Tutup 🌸
+                </button>
+            </div>
+        </div>
+
+        <!-- REFERENCE PANEL DRAWER (PANDUAN BUSANA ADAT) -->
+        <div id="reference-drawer" class="fixed inset-y-0 right-0 w-full max-w-xl bg-slate-900 border-l-4 border-amber-500 z-50 transform translate-x-full transition-transform duration-300 ease-in-out shadow-2xl flex flex-col text-white">
+            <div class="p-4 bg-slate-950 flex justify-between items-center border-b border-slate-800">
+                <div>
+                    <h3 class="title-font font-bold text-amber-400 text-sm">PANDUAN REFERENSI BUSANA ADAT BALI MADYA</h3>
+                    <p class="text-xs text-slate-400">Rujukan Akurasi Busana, Karakter, & Layout Dapur Tradisional</p>
+                </div>
+                <button onclick="toggleReferenceDrawer()" class="text-slate-400 hover:text-slate-100 bg-slate-800 px-3 py-1.5 rounded-lg text-xs font-bold">
+                    ✕ Tutup
+                </button>
+            </div>
+
+            <div class="p-6 overflow-y-auto flex-grow flex flex-col gap-6">
+                <!-- Verbatim Visual Rujukan Model -->
+                <div class="border-2 border-amber-500/50 rounded-xl overflow-hidden bg-slate-950 p-2 text-center">
+                    <img src="Salinan COMIC SERUNYA BELAJAR DI KEBUN.jpg" alt="Salinan COMIC SERUNYA BELAJAR DI KEBUN.jpg" class="w-full h-auto rounded object-contain" onerror="this.src='https://placehold.co/600x400/163c32/ffba00?text=Salinan+COMIC+SERUNYA+BELAJAR+DI+KEBUN.jpg';">
+                    <span class="text-[10px] text-amber-500 font-bold block mt-2 uppercase tracking-wide">Gambar Rujukan: Salinan COMIC SERUNYA BELAJAR DI KEBUN.jpg</span>
+                </div>
+
+                <div class="grid grid-cols-2 gap-4 text-xs">
+                    <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                        <strong class="text-amber-400 block mb-1">👔 Busana Wanita Bali Madya</strong>
+                        Rambut sanggul pusung tagel, hiasan sekuntum bunga kamboja (frangipani) kuning, baju kebaya kuning/krem, selendang sash, serta kamen tenun bawah panjang.
+                    </div>
+                    <div class="bg-slate-800 p-3 rounded-lg border border-slate-700">
+                        <strong class="text-amber-400 block mb-1">👳 Busana Pria Bali Madya</strong>
+                        Udeng putih pengikat kepala khas Bali, kemeja safari putih daster kancing rapi, serta kamen merah marun bermotif prada emas tradisional.
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CODE LOGIC & BACKEND INTEGATION (FIREBASE REALTIME BACKEND) -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, doc, setDoc, collection, onSnapshot } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Konfigurasi Database Hubungkan ke Backend Awan Firebase
+        const firebaseConfig = {
+            apiKey: "", // Kosongkan secara aman, sistem akan mendeteksi otomatis dan beralih ke Mode Offline Lokal
+            authDomain: "megibung-edu.firebaseapp.com",
+            projectId: "megibung-edu",
+            storageBucket: "megibung-edu.appspot.com",
+            messagingSenderId: "1234567890",
+            appId: "1:1234567890:web:1234567890"
+        };
+
+        // Detektor Status Aktif Firebase
+        let isFirebaseActive = false;
+        let app = null;
+        let db = null;
+        let auth = null;
+
+        // Inisialisasi Firebase secara aman untuk menghindari crash akibat API Key kosong
+        if (firebaseConfig.apiKey && firebaseConfig.apiKey.trim() !== "") {
+            try {
+                app = initializeApp(firebaseConfig);
+                auth = getAuth(app);
+                db = getFirestore(app);
+                isFirebaseActive = true;
+            } catch (err) {
+                console.warn("Gagal menginisialisasi Firebase SDK:", err);
+            }
+        }
+
+        // State Global Sinkronisasi Real-Time
+        let studentsListCache = [];
+
+        // Hubungkan Sesi Otentikasi Anonim untuk Melacak Log Aktivitas Siswa
+        async function connectBackend() {
+            if (!isFirebaseActive) {
+                console.log("⚠️ API Key Firebase tidak dikonfigurasi. Menggunakan Mode Offline.");
+                const syncBadge = document.getElementById('sync-badge');
+                if (syncBadge) {
+                    syncBadge.innerHTML = "🟡 Mode Sinkron: Offline (Lokal)";
+                    syncBadge.className = "bg-amber-950 border border-amber-600 text-amber-300 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold";
+                }
+                // Muat data lokal secara aman untuk simulasi
+                setupOfflineSimulators();
+                return;
+            }
+
+            try {
+                if (auth) {
+                    await signInAnonymously(auth);
+                    console.log("🟢 Koneksi Backend Berhasil!");
+                    const syncBadge = document.getElementById('sync-badge');
+                    if (syncBadge) {
+                        syncBadge.innerHTML = "🟢 Realtime Sync: Aktif";
+                        syncBadge.className = "bg-emerald-900 border border-emerald-600 text-emerald-300 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold";
+                    }
+                    setupRealtimeListeners();
+                }
+            } catch (err) {
+                console.warn("⚠️ Gagal menyambungkan ke awan. Mode Offline diaktifkan.", err);
+                const syncBadge = document.getElementById('sync-badge');
+                if (syncBadge) {
+                    syncBadge.innerHTML = "🔴 Mode Sinkron: Gangguan Jaringan";
+                    syncBadge.className = "bg-rose-900 border border-rose-600 text-rose-300 px-3 py-1.5 rounded-full text-[10px] font-mono font-bold";
+                }
+                setupOfflineSimulators();
+            }
+        }
+
+        // Jalankan Koneksi saat halaman siap
+        window.addEventListener('DOMContentLoaded', () => {
+            connectBackend();
+        });
+
+        // Simulator Data Offline Lokal saat Firebase dinonaktifkan
+        function setupOfflineSimulators() {
+            // Muat hasil belajar lokal dari localStorage
+            const localResults = JSON.parse(localStorage.getItem('local_student_results') || '[]');
+            studentsListCache = localResults;
+            renderStudentResultsTable(localResults);
+        }
+
+        // Fungsi Pembantu Render Tabel Nilai Siswa
+        function renderStudentResultsTable(list) {
+            const tbody = document.getElementById('student-live-tbody');
+            if (!tbody) return;
+            tbody.innerHTML = "";
+
+            if (!list || list.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-stone-500">Belum ada aktivitas siswa yang masuk.</td></tr>`;
+                return;
+            }
+
+            list.forEach((student) => {
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-amber-50/50 transition-all";
+                tr.innerHTML = `
+                    <td class="p-3 font-bold text-amber-900">${student.name || 'Siswa'}</td>
+                    <td class="p-3">Halaman ${student.currentPage || 1}</td>
+                    <td class="p-3 text-center font-bold text-emerald-600">${student.solvedCount || 0} / 10</td>
+                    <td class="p-3 text-center">
+                        <span class="px-2 py-0.5 rounded-full text-[10px] font-extrabold ${student.graduated ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}">
+                            ${student.graduated ? '🏆 Lulus' : '⏳ Belajar'}
+                        </span>
+                    </td>
+                    <td class="p-3 text-slate-500 font-mono text-[10px]">${student.timestamp || '-'}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        // --- MENGHUBUNGKAN LISTENERS REALTIME ---
+        function setupRealtimeListeners() {
+            if (!isFirebaseActive || !db) return;
+
+            // 1. Sinkronisasi Kustomisasi Gambar dari Guru ke Siswa secara Real-Time
+            const illustrationsCol = collection(db, 'illustrations');
+            onSnapshot(illustrationsCol, (snapshot) => {
+                snapshot.forEach((doc) => {
+                    const data = doc.data();
+                    const pageNum = parseInt(doc.id.replace('page_', ''));
+                    if (!isNaN(pageNum) && illustrationsState[pageNum]) {
+                        illustrationsState[pageNum].gambar = data.gambar;
+                        illustrationsState[pageNum].deskripsi = data.deskripsi;
+                        illustrationsState[pageNum].ikon = data.ikon;
+                    }
+                });
+                renderComicPage();
+            });
+
+            // 2. Sinkronisasi Daftar Nilai & Progress Siswa (Terbaca langsung di Panel Guru)
+            const studentResultsCol = collection(db, 'student_results');
+            onSnapshot(studentResultsCol, (snapshot) => {
+                const tbody = document.getElementById('student-live-tbody');
+                tbody.innerHTML = "";
+                studentsListCache = [];
+
+                if (snapshot.empty) {
+                    tbody.innerHTML = `<tr><td colspan="5" class="p-4 text-center text-slate-500">Belum ada aktivitas siswa yang masuk.</td></tr>`;
+                    return;
+                }
+
+                snapshot.forEach((doc) => {
+                    const student = doc.data();
+                    studentsListCache.push(student);
+                });
+                renderStudentResultsTable(studentsListCache);
+            });
+        }
+
+        // --- MEMPERBARUI PERKEMBANGAN SISWA KE AWAN ---
+        window.syncProgressToCloud = async function(isGraduated = false) {
+            if (currentRole !== 'siswa') return;
+
+            let solvedCount = 0;
+            COMIC_STORY.forEach((story, idx) => {
+                if (quizProgress[idx] === true) solvedCount++;
+            });
+
+            const payload = {
+                name: currentUsername,
+                currentPage: currentPageIdx + 1,
+                solvedCount: solvedCount,
+                graduated: isGraduated,
+                timestamp: new Date().toLocaleTimeString()
+            };
+
+            // Selalu simpan secara lokal terlebih dahulu
+            let localResults = JSON.parse(localStorage.getItem('local_student_results') || '[]');
+            const existingIdx = localResults.findIndex(r => r.name === currentUsername);
+            if (existingIdx > -1) {
+                localResults[existingIdx] = payload;
+            } else {
+                localResults.push(payload);
+            }
+            localStorage.setItem('local_student_results', JSON.stringify(localResults));
+            studentsListCache = localResults;
+
+            // Jika offline, perbarui tampilan tabel lokal secara langsung
+            if (!isFirebaseActive) {
+                renderStudentResultsTable(localResults);
+                return;
+            }
+
+            // Kirim data ke awan Firebase jika aktif
+            try {
+                const userId = auth && auth.currentUser ? auth.currentUser.uid : 'offline-user';
+                const recordRef = doc(db, 'student_results', userId);
+                await setDoc(recordRef, payload, { merge: true });
+            } catch (err) {
+                console.error("Gagal mengirim progres ke awan: ", err);
+            }
+        };
+
+        // --- ADMINISTRATOR MENGUNGGAH PERUBAHAN KE AWAN ---
+        window.saveCurrentPageChanges = async function() {
+            const descValue = document.getElementById('admin-desc-input').value.trim();
+            const emojiValue = document.getElementById('admin-emoji-input').value.trim();
+
+            if (!descValue) {
+                synth.playBeep(180, 'sawtooth', 0.3, 0.15);
+                showToast("Deskripsi ilustrasi tidak boleh kosong!", "error");
+                return;
+            }
+
+            // Simpan lokal terlebih dahulu
+            illustrationsState[adminSelectedPageIdx].deskripsi = descValue;
+            illustrationsState[adminSelectedPageIdx].ikon = emojiValue || "🌸";
+            saveToLocalStorage();
+
+            // Segera perbarui layar komik aktif jika sedang mengedit halaman yang sama
+            if (currentPageIdx === adminSelectedPageIdx) {
+                renderComicPage();
+            }
+
+            // Jika offline, beri tahu bahwa disimpan secara lokal
+            if (!isFirebaseActive || !db) {
+                synth.playSuccess();
+                showToast(`Kustomisasi visual Halaman ${adminSelectedPageIdx + 1} disimpan secara lokal!`, "success");
+                return;
+            }
+
+            // Unggah ke Firestore Real-Time Database jika online
+            try {
+                const pageDocId = `page_${adminSelectedPageIdx}`;
+                const docRef = doc(db, 'illustrations', pageDocId);
+
+                const payload = {
+                    gambar: illustrationsState[adminSelectedPageIdx].gambar,
+                    deskripsi: descValue,
+                    ikon: emojiValue || "🌸",
+                    timestamp: new Date().toLocaleTimeString()
+                };
+
+                await setDoc(docRef, payload, { merge: true });
+                synth.playSuccess();
+                showToast(`Kustomisasi visual Halaman ${adminSelectedPageIdx + 1} berhasil diunggah ke awan!`, "success");
+            } catch (err) {
+                console.error("Gagal mengunggah perubahan ke awan: ", err);
+                showToast("Gagal menyimpan ke awan. Disimpan secara lokal saja.", "error");
+            }
+        };
+
+        // --- EVALUASI SISWA BERBASIS AI CHAT (GEMINI CHATBOT INTEGRATION) ---
+        // Mekanisme Panggilan Aman Gemini API dengan Exponential Backoff
+        async function callGemini(payload) {
+            const apiKey = ""; // Otomatis terpasang oleh platform runtime
+            const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash-preview-09-2025:generateContent?key=${apiKey}`;
+            let delay = 1000;
+            
+            for (let i = 0; i < 5; i++) {
+                try {
+                    const response = await fetch(url, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+                    if (response.ok) {
+                        return await response.json();
+                    }
+                } catch (e) {
+                    // Penanganan eror teredam
+                }
+                await new Promise(resolve => setTimeout(resolve, delay));
+                delay *= 2;
+            }
+            throw new Error("Kakek sedang lelah berjalan. Silakan bertanya beberapa saat lagi, ya.");
+        }
+
+        // Mengirim Chatbot Tanya Kakek Wayan AI
+        window.handleSendAIChat = async function() {
+            const inputEl = document.getElementById('ai-chat-input');
+            const chatHistoryEl = document.getElementById('ai-chat-history');
+            const loaderEl = document.getElementById('ai-chat-loading');
+            const question = inputEl.value.trim();
+
+            if (!question) return;
+
+            // Tempelkan input chat siswa di layar
+            const userMsgDiv = document.createElement('div');
+            userMsgDiv.className = "text-slate-200 leading-relaxed mt-1 border-t border-emerald-800/40 pt-1.5 text-xs";
+            userMsgDiv.innerHTML = `👤 <strong>Kamu:</strong> ${question}`;
+            chatHistoryEl.appendChild(userMsgDiv);
+            
+            inputEl.value = '';
+            chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+
+            loaderEl.classList.remove('hidden');
+            synth.playBeep(450, 'sine', 0.1, 0.1);
+
+            // Susun instruksi pengkondisian karakter (System Prompt)
+            const systemPrompt = "Kamu adalah Kakek Wayan, sesepuh adat bijaksana dari desa di Karangasem, Bali. Panggillah lawan bicaramu dengan panggilan penyayang seperti 'Cucu Kakek', 'Cucuku', 'Anakku'. Kamu berbicara dengan bahasa Indonesia yang sangat hangat, ramah, sesekali menyisipkan istilah sopan bahasa Bali (seperti 'Nggih', 'Matur Suksma', 'Mebasa Bali') dan menerjemahkannya dengan santun. Fokuslah memberikan bimbingan tentang adab Megibung, etika kemasyarakatan, keadilan porsi makan, saling asah-asih-asuh, toleransi, dan pelestarian budaya lokal di Karangasem. Jawab dengan ringkas (maksimal 3-4 kalimat).";
+
+            const payload = {
+                contents: [{
+                    parts: [{ text: `Pertanyaan dari siswa bernama ${currentUsername || 'Tamu'}: ${question}` }]
+                }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+
+            try {
+                const responseData = await callGemini(payload);
+                const replyText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "Aduh Cucuku, Kakek agak lupa. Coba tanya lagi ya, nggih?";
+                
+                const aiMsgDiv = document.createElement('div');
+                aiMsgDiv.className = "text-amber-300 font-medium leading-relaxed mt-1 border-t border-emerald-800/40 pt-1.5 text-xs";
+                aiMsgDiv.innerHTML = `👵🏽 <strong>Kakek Wayan:</strong> ${replyText}`;
+                chatHistoryEl.appendChild(aiMsgDiv);
+                
+                synth.playSuccess();
+            } catch (err) {
+                const errorMsgDiv = document.createElement('div');
+                errorMsgDiv.className = "text-rose-400 font-semibold text-[10px] mt-1 italic";
+                errorMsgDiv.innerHTML = `⚠️ ${err.message}`;
+                chatHistoryEl.appendChild(errorMsgDiv);
+                synth.playError();
+            } finally {
+                loaderEl.classList.add('hidden');
+                chatHistoryEl.scrollTop = chatHistoryEl.scrollHeight;
+            }
+        };
+
+        // Analisis Hasil Belajar Siswa Berbasis AI Guru Dashboard
+        window.handleAIAnalyzeStudents = async function() {
+            const loaderEl = document.getElementById('ai-evaluation-loading');
+            const resultEl = document.getElementById('ai-evaluation-result');
+
+            if (studentsListCache.length === 0) {
+                showToast("Belum ada data aktivitas siswa untuk dianalisis oleh AI!", "error");
+                return;
+            }
+
+            loaderEl.classList.remove('hidden');
+            resultEl.classList.add('hidden');
+            synth.playBeep(520, 'triangle', 0.2, 0.15);
+
+            // Susun rekap data siswa dalam format string terstruktur
+            const studentsDataString = studentsListCache.map(s => 
+                `- Nama: ${s.name}, Halaman Aktif: ${s.currentPage}/10, Tantangan Terselesaikan: ${s.solvedCount}/10, Lulus: ${s.graduated ? 'Ya' : 'Belum'}`
+            ).join('\n');
+
+            const systemPrompt = "Kamu adalah Asisten Kurikulum Merdeka & Analis PjBL (Project Based Learning) Cerdas. Tugasmu adalah menganalisis data rekap kemajuan belajar siswa dalam mempelajari tradisi Megibung Karangasem. Buat laporan evaluasi singkat terstruktur dalam bahasa Indonesia yang memuat: 1) Analisis umum tingkat pemahaman kognitif siswa, 2) Perkembangan karakter sosial (Gotong Royong, Kesetaraan, Kerja Sama), dan 3) Rekomendasi konkret bagi guru untuk tindak lanjut pengajaran berbasis Discovery Learning di kelas nyata.";
+
+            const payload = {
+                contents: [{
+                    parts: [{ text: `Berikut adalah data aktivitas riil siswa saat ini:\n${studentsDataString}` }]
+                }],
+                systemInstruction: {
+                    parts: [{ text: systemPrompt }]
+                }
+            };
+
+            try {
+                const responseData = await callGemini(payload);
+                const reportText = responseData.candidates?.[0]?.content?.parts?.[0]?.text || "Gagal menyusun ringkasan evaluasi otomatis.";
+                
+                resultEl.innerText = reportText;
+                resultEl.classList.remove('hidden');
+                resultEl.scrollTop = 0;
+                synth.playSuccess();
+                showToast("Analisis laporan PjBL cerdas AI berhasil disintesis!", "success");
+            } catch (err) {
+                resultEl.innerText = `⚠️ Terjadi kendala saat menghubungi AI: ${err.message}`;
+                resultEl.classList.remove('hidden');
+                synth.playError();
+            } finally {
+                loaderEl.classList.add('hidden');
+            }
+        };
+    </script>
+
+    <!-- AVATAR PROFILE GENERATION SYSTEM (Menyelaraskan Sesuai Foto "Salinan COMIC SERUNYA BELAJAR DI KEBUN.jpg") -->
+    <script>
+        // Membuat Vector Avatar SVG dinamis yang akurat sesuai busana adat bali madya
+        function getCharacterAvatarSVG(name) {
+            const colorMeta = CHARACTER_META[name] ? CHARACTER_META[name].color : "bg-stone-100";
+            
+            // Menggambar visual yang tepat berdasarkan ciri-ciri tokoh di dalam komik
+            let balineseVisual = "";
+
+            if (name === "Wayan") {
+                // Gadis dengan kuncup bunga kamboja kuning di telinga kiri, baju kebaya putih, ikat selendang kuning
+                balineseVisual = `
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <!-- Head & Hair -->
+                        <circle cx="50" cy="50" r="30" fill="#f5c1a1"/>
+                        <path d="M 20 40 Q 50 15 80 40 Q 50 25 20 40 Z" fill="#312217"/>
+                        <circle cx="50" cy="22" r="12" fill="#312217"/> <!-- Hair Sanggul Pusung Tagel -->
+                        <!-- Kamboja Flower -->
+                        <circle cx="28" cy="38" r="6" fill="#fff" />
+                        <circle cx="28" cy="38" r="2.5" fill="#f59e0b" />
+                        <!-- Face Features -->
+                        <circle cx="42" cy="50" r="3" fill="#2d1c10" />
+                        <circle cx="58" cy="50" r="3" fill="#2d1c10" />
+                        <path d="M 45 60 Q 50 65 55 60" stroke="#2d1c10" stroke-width="2" fill="none" />
+                        <!-- Kebaya & Sash -->
+                        <path d="M 25 80 L 75 80 L 65 100 L 35 100 Z" fill="#faf5ff" />
+                        <rect x="35" y="90" width="30" height="6" fill="#fbbf24" /> <!-- Yellow sash -->
+                    </svg>
+                `;
+            } else if (name === "I Luh") {
+                // Gadis bermahkota adat emas, kebaya cokelat muda/krem
+                balineseVisual = `
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="50" cy="50" r="30" fill="#f5c1a1"/>
+                        <path d="M 20 40 Q 50 15 80 40" fill="#312217" />
+                        <!-- Gold Crown (Mahkota Adat) -->
+                        <path d="M 30 30 L 50 10 L 70 30 Z" fill="#fbbf24" stroke="#d97706" stroke-width="1.5" />
+                        <circle cx="50" cy="10" r="3" fill="#f43f5e" />
+                        <!-- Face -->
+                        <circle cx="42" cy="50" r="3" fill="#2d1c10" />
+                        <circle cx="58" cy="50" r="3" fill="#2d1c10" />
+                        <path d="M 45 60 Q 50 65 55 60" stroke="#2d1c10" stroke-width="2" fill="none" />
+                        <!-- Kebaya -->
+                        <path d="M 25 80 L 75 80 L 65 100 L 35 100 Z" fill="#fed7aa" />
+                        <rect x="35" y="92" width="30" height="5" fill="#f43f5e" /> <!-- Maroon sash -->
+                    </svg>
+                `;
+            } else if (name === "Mbok Gek") {
+                // Gadis bermahkota bunga mawar merah, baju kebaya hitam
+                balineseVisual = `
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="50" cy="50" r="30" fill="#f5c1a1"/>
+                        <path d="M 20 40 Q 50 15 80 40" fill="#312217" />
+                        <circle cx="30" cy="25" r="5" fill="#f43f5e" /> <!-- Red rose flower in hair -->
+                        <!-- Face -->
+                        <circle cx="42" cy="50" r="3" fill="#2d1c10" />
+                        <circle cx="58" cy="50" r="3" fill="#2d1c10" />
+                        <path d="M 45 60 Q 50 65 55 60" stroke="#2d1c10" stroke-width="2" fill="none" />
+                        <!-- Black Kebaya -->
+                        <path d="M 25 80 L 75 80 L 65 100 L 35 100 Z" fill="#1e293b" />
+                        <rect x="35" y="92" width="30" height="5" fill="#fbbf24" /> <!-- Golden sash -->
+                    </svg>
+                `;
+            } else if (name === "Gusti Ayu") {
+                // Gadis berkebaya putih bersih, ikat kain merah muda
+                balineseVisual = `
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="50" cy="50" r="30" fill="#f5c1a1"/>
+                        <path d="M 20 40 Q 50 15 80 40" fill="#312217" />
+                        <circle cx="70" cy="25" r="5" fill="#fbbf24" /> <!-- Yellow flower -->
+                        <!-- Face -->
+                        <circle cx="42" cy="50" r="3" fill="#2d1c10" />
+                        <circle cx="58" cy="50" r="3" fill="#2d1c10" />
+                        <path d="M 45 60 Q 50 65 55 60" stroke="#2d1c10" stroke-width="2" fill="none" />
+                        <!-- White Kebaya -->
+                        <path d="M 25 80 L 75 80 L 65 100 L 35 100 Z" fill="#f8fafc" />
+                        <rect x="35" y="92" width="30" height="5" fill="#ec4899" /> <!-- Pink sash -->
+                    </svg>
+                `;
+            } else if (name === "Bli De") {
+                // Pria tampan ber-Udeng putih ikat kepala, kemeja safari putih daster kancing rapi
+                balineseVisual = `
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="50" cy="54" r="28" fill="#f5c1a1"/>
+                        <!-- White Udeng (Balinese traditional headband) -->
+                        <rect x="20" y="26" width="60" height="10" fill="#ffffff" rx="3" />
+                        <path d="M 45 26 L 50 10 L 55 26 Z" fill="#ffffff" /> <!-- Udeng knot knot -->
+                        <!-- Face -->
+                        <circle cx="40" cy="54" r="3" fill="#2d1c10" />
+                        <circle cx="60" cy="54" r="3" fill="#2d1c10" />
+                        <path d="M 45 66 Q 50 70 55 66" stroke="#2d1c10" stroke-width="2" fill="none" />
+                        <!-- White Safari Shirt -->
+                        <path d="M 22 84 L 78 84 L 70 100 L 30 100 Z" fill="#ffffff" />
+                        <line x1="50" y1="84" x2="50" y2="100" stroke="#d97706" stroke-width="1.5" /> <!-- Gold buttons line -->
+                    </svg>
+                `;
+            } else if (name === "Kakek Wayan") {
+                // Tetua adat bijaksana dengan Udeng putih, kumis tipis putih ramah, kemeja putih safari, ikat pinggang kuning emas
+                balineseVisual = `
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="50" cy="54" r="28" fill="#fcd34d" opacity="0.3"/> <!-- Background glow -->
+                        <circle cx="50" cy="54" r="28" fill="#f6d3b9"/>
+                        <!-- White Udeng -->
+                        <rect x="18" y="26" width="64" height="11" fill="#f8fafc" rx="3" stroke="#e2e8f0" />
+                        <path d="M 44 26 L 50 8 L 56 26 Z" fill="#f8fafc" />
+                        <!-- Elderly Eyebrows & Eyes -->
+                        <path d="M 34 46 Q 40 43 44 47" stroke="#94a3b8" stroke-width="2.5" fill="none" />
+                        <path d="M 56 47 Q 60 43 66 46" stroke="#94a3b8" stroke-width="2.5" fill="none" />
+                        <circle cx="40" cy="54" r="3" fill="#2d1c10" />
+                        <circle cx="60" cy="54" r="3" fill="#2d1c10" />
+                        <!-- Mustache (Kumis Putih Ramah) -->
+                        <path d="M 38 64 Q 50 60 62 64" stroke="#e2e8f0" stroke-width="3" fill="none" stroke-linecap="round" />
+                        <path d="M 45 70 Q 50 73 55 70" stroke="#2d1c10" stroke-width="1.5" fill="none" />
+                        <!-- Shirt -->
+                        <path d="M 22 84 L 78 84 L 70 100 L 30 100 Z" fill="#ffffff" />
+                        <rect x="30" y="88" width="40" height="6" fill="#fbbf24" /> <!-- Golden belt -->
+                    </svg>
+                `;
+            } else {
+                // Gabungan beberapa warga desa
+                balineseVisual = `
+                    <svg viewBox="0 0 100 100" class="w-full h-full">
+                        <circle cx="35" cy="50" r="20" fill="#f5c1a1"/>
+                        <circle cx="65" cy="50" r="20" fill="#e6a480"/>
+                        <circle cx="35" cy="50" r="2" fill="#000" /><circle cx="65" cy="50" r="2" fill="#000" />
+                        <path d="M 20 80 Q 50 50 80 80" fill="#d97706" />
+                    </svg>
+                `;
+            }
+
+            return `<div class="w-full h-full rounded-full overflow-hidden border-2 border-[#3b2314] bg-[#fdfaf6] flex items-center justify-center p-0.5">${balineseVisual}</div>`;
+        }
+    </script>
+
+    <!-- MEMPERBARUI BALON KATA SPEECH BUBBLE DENGAN FOTO PROFIL SVG BARU -->
+    <script>
+        // Modifikasi fungsi render dialogues agar memanggil generator SVG di atas
+        window.renderDialogues = function(dialogues) {
+            const container = document.getElementById('dialogues-container');
+            container.innerHTML = "";
+
+            dialogues.forEach(diag => {
+                const isLeft = diag.side === 'left';
+                
+                const wrap = document.createElement('div');
+                wrap.className = `flex items-start gap-3 w-full my-1.5 ${isLeft ? 'flex-row' : 'flex-row-reverse'}`;
+
+                // Avatar Container khusus memanggil SVG Vektor Bali kustom
+                const avatar = document.createElement('div');
+                avatar.className = `w-14 h-14 rounded-full flex items-center justify-center shadow-md shrink-0 transition-transform hover:scale-105`;
+                avatar.innerHTML = getCharacterAvatarSVG(diag.character);
+
+                // Balon Kata
+                const bubble = document.createElement('div');
+                bubble.className = `speech-bubble ${isLeft ? 'bubble-left' : 'bubble-right'} p-3.5 max-w-[80%] md:max-w-[70%]`;
+
+                const nameTag = document.createElement('div');
+                nameTag.className = "text-[10px] font-black uppercase tracking-wider text-amber-900 mb-1";
+                nameTag.innerText = diag.character;
+
+                const textSpan = document.createElement('p');
+                textSpan.className = "comic-font text-base md:text-lg text-slate-800 leading-snug";
+                textSpan.innerText = diag.text;
+
+                bubble.appendChild(nameTag);
+                bubble.appendChild(textSpan);
+
+                wrap.appendChild(avatar);
+                wrap.appendChild(bubble);
+
+                container.appendChild(wrap);
+            });
+        };
+
+        // Fungsi kontrol membuka referensi drawer kustom
+        window.toggleReferenceDrawer = function() {
+            const drawer = document.getElementById("reference-drawer");
+            if (drawer.classList.contains("translate-x-full")) {
+                drawer.classList.remove("translate-x-full");
+                synth.playBeep(400, 'triangle', 0.1, 0.15);
+            } else {
+                drawer.classList.add("translate-x-full");
+                synth.playBeep(200, 'triangle', 0.1, 0.1);
+            }
+        };
+    </script>
+</body>
+</html>
